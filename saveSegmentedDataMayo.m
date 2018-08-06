@@ -18,7 +18,7 @@
 
 % Further, we save data around two events of interest: first stimulus and the target.
 
-function saveSegmentedData(fileNameString,folderSourceString)
+function saveSegmentedDataMayo(fileNameString,folderSourceString)
 
 if ~exist('folderSourceString','var');   folderSourceString='F:\Projects\MayoProject\';       end
 

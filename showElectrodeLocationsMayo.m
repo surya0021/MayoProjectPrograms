@@ -35,7 +35,7 @@ if ~isempty(highlightElectrodes)
     for i=1:length(highlightElectrodes)
         highlightElectrode=highlightElectrodes(i);
         
-        [highlightRow,highlightCol,electrodeArray] = electrodePositionOnGrid(highlightElectrode);
+        [highlightRow,highlightCol,electrodeArray] = electrodePositionOnGridMayo(highlightElectrode);
 
         % Create patch
         patchX = (highlightCol-1)*dX;
