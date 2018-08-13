@@ -229,27 +229,18 @@ hMessage = uicontrol('Unit','Normalized','Position',[0 0.95 1 0.05],...
         stRange = [str2double(get(hStimPeriodMin,'String')) str2double(get(hStimPeriodMax,'String'))];
 
         % Load Data
-        fileNameSaveString = fullfile(folderName,[fileNameString tStr aStr cStr '_' tpStr]);
-        disp(['Loading ' fileNameSaveString]);
-        lfpData=load(fileNameSaveString);
+        if strcmp(cStr,'N')
+            fileNameSaveStringLFP = fullfile(folderName,[fileNameString tStr cStr '_' tpStr '_LFP']);
+            fileNameSaveStringSpikes = fullfile(folderName,[fileNameString tStr cStr '_' tpStr '_Spikes']);
+        else
+            fileNameSaveStringLFP = fullfile(folderName,[fileNameString tStr aStr cStr '_' tpStr '_LFP']);
+            fileNameSaveStringSpikes = fullfile(folderName,[fileNameString tStr aStr cStr '_' tpStr '_Spikes']);
+        end
+        
+        lfpData=load(fileNameSaveStringLFP);
+        spikeData=load(fileNameSaveStringSpikes);
         
         set(hMessage,'String',[num2str(size(lfpData.segmentedLFPData,2)) ' stimuli found' ]);
-        
-        if analysisType == 2 % Spike Analysis. Work on this once spike data is available
-            holdOnState = get(hHoldOn,'val');
-            channelsStored = neuralChannelsStored;
-            [baselineFiringRate,stimulusFiringRate] = plotSpikeData(plotHandles,channelsStored,goodPos,folderSpikes,...
-                timeVals,plotColor,SourceUnitID,holdOnState,blRange,stRange,gridType,subjectName);
-            responsiveElectrodes = (channelsStored(stimulusFiringRate>=5));
-            inhibitedElectrodes = (channelsStored(intersect(find(baselineFiringRate>=5),find(stimulusFiringRate<=5))));
-            disp(['responsive: ' num2str(responsiveElectrodes)]);
-            disp(['inhibited : ' num2str(inhibitedElectrodes)]);
-            showElectrodeLocations(electrodeGridPos,responsiveElectrodes,'b',hElectrodes,1,0,gridType,subjectName,gridLayout);
-            showElectrodeLocations(electrodeGridPos,inhibitedElectrodes,'g',hElectrodes,1,0,gridType,subjectName,gridLayout);
-            
-        else
-            plotLFPData(plotHandles,lfpData,analysisType,plotColor,blRange,stRange);
-        end
         
         if analysisType<=2 % ERP or spikes
             xRange = [str2double(get(hStimMin,'String')) str2double(get(hStimMax,'String'))];
@@ -257,6 +248,12 @@ hMessage = uicontrol('Unit','Normalized','Position',[0 0.95 1 0.05],...
             xRange = [str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String'))];
         end
         
+        if analysisType == 2 % Spikes
+            plotSpikeData(plotHandles,spikeData,plotColor,xRange);
+        else
+            plotLFPData(plotHandles,lfpData,analysisType,plotColor,blRange,stRange);
+        end
+
         yRange = getYLims(plotHandles);
         set(hYMin,'String',num2str(yRange(1))); set(hYMax,'String',num2str(yRange(2)));
         rescaleData(plotHandles,[xRange yRange]);
@@ -373,57 +370,16 @@ for i=1:numElectrodes
     end
 end
 end
-function [baselineFiringRate,stimulusFiringRate] = plotSpikeData(plotHandles,channelsStored,goodPos, ...
-    folderData, timeVals, plotColor, SourceUnitID,holdOnState,blRange,stRange,gridType,subjectName)
+function plotSpikeData(plotHandles,spikeData,plotColor,xRange)
 
-unitColors = ['r','m','y','c','g'];
 binWidthMS = 10;
 
-if isempty(goodPos)
-    disp('No entries for this combination..')
-else
-    numChannels = length(channelsStored);
-    baselineFiringRate = zeros(1,numChannels);
-    stimulusFiringRate = zeros(1,numChannels);
-    
-    for i=1:length(channelsStored)
-        channelNum = channelsStored(i);
-        disp(channelNum)
+numElectrodes = size(spikeData.segmentedSpikeData,1);
 
-        % get position
-        [row,column] = electrodePositionOnGrid(channelNum,gridType,subjectName);
-
-        clear neuralInfo spikeData
-        load(fullfile(folderData,['elec' num2str(channelNum) '_SID' num2str(SourceUnitID(i))]));
-        [psthVals,xs] = getPSTH(spikeData(goodPos),binWidthMS,[timeVals(1) timeVals(end)]);
-        
-        % Compute the mean firing rates
-        blPos = find(xs>=blRange(1),1)+ (1:(diff(blRange))/(binWidthMS/1000));
-        stPos = find(xs>=stRange(1),1)+ (1:(diff(stRange))/(binWidthMS/1000));
-        
-        baselineFiringRate(i) = mean(psthVals(blPos));
-        stimulusFiringRate(i) = mean(psthVals(stPos));
-        
-        if SourceUnitID(i)==0
-            plot(plotHandles(row,column),xs,psthVals,'color',plotColor);
-        elseif SourceUnitID(i)> 5
-            disp('Only plotting upto 6 single units per electrode...')
-        else
-            plot(plotHandles(row,column),xs,smooth(psthVals),'color',unitColors(SourceUnitID(i)));
-        end
-        
-        if (i<length(channelsStored))
-            if channelsStored(i) == channelsStored(i+1)
-                disp('hold on...')
-                set(plotHandles(row,column),'Nextplot','add');
-            else
-                if ~holdOnState
-                    set(plotHandles(row,column),'Nextplot','replace');
-                end
-            end
-        end
-        
-    end
+for i=1:numElectrodes
+    [row,column] = electrodePositionOnGridMayo(i); % get position
+    [psthVals,xs] = getPSTH(spikeData.segmentedSpikeData(i,:),binWidthMS,[xRange(1) xRange(2)]);
+    plot(plotHandles(row,column),xs,psthVals,'color',plotColor);
 end
 end   
 

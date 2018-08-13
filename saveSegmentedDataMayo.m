@@ -26,7 +26,7 @@ if ~exist('folderSourceString','var');   folderSourceString='F:\Projects\MayoPro
 saveStringConditionList = [{'H0V'} {'H1V'} {'H0I'} {'H1I'} {'M0V'} {'M1V'} {'M0I'} {'M1I'} {'HN'} {'MN'}]; % Data must be stored in this order
 Fs = 2000;
 timePeriodS{1} = [-0.25 0.5]; % Save this interval around the first stimulus onset 
-timePeriodS{2} = [-0.5 0.25]; % Save this interval around the target onset
+timePeriodS{2} = [-0.5 0.1]; % Save this interval around the target onset
 saveStringTimePeriodList = [{'_StimOnset'} {'_TargetOnset'}];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Load Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,10 +49,18 @@ lfpData = load(fullfile(folderNameIn,fileNameLFP));
 lfpData = lfpData.(fileNameLFP); % dimension: trials x channels (each cell is an array of the voltage values for the specific trial and channel)
 display([fileNameLFP ' file loaded.....']);
 
+fileNameSpikes = strcat(fileNameString, '_Spikes');
+spikeData = load(fullfile(folderNameIn,fileNameSpikes));
+spikeData = spikeData.(fileNameSpikes); % dimension: trials x channels (each cell is an array of the voltage values for the specific trial and channel)
+display([fileNameSpikes ' file loaded.....']);
+
 %%%%%%%%%%%%%%%%%%%%%%%% Find appropriate indices %%%%%%%%%%%%%%%%%%%%%%%%%
 goodIndexList = getGoodIndices(CDS,DAT); % Get Indices for the 10 categories
 trialStartTimeS = cell2mat(cellfun(@(x) x{1}, CDS(:,1),'UniformOutput',false ));
 stimulusOnTimeS = cellfun(@(x) x{5}, CDS(:,1),'UniformOutput',false); % still under cell format. dimension: trials x 1 (in the first and only columnm there are cells containing all the trial start times for the corresponding trial
+%saccadeTimeS = cell2mat(cellfun(@(x) x{7}, CDS(:,1),'UniformOutput',false));
+
+[~,~,targetOnTimeMS,~,~] = getInfoDATFile(DAT);
 
 numElectrodes = size(lfpData,2);
 numTimeSegments = length(timePeriodS);
@@ -65,51 +73,54 @@ for i=1:length(goodIndexList) % For each of the 10 conditions
     disp(['Working on condition ' saveStringConditionList{i}]);
     
     for j=1:numTimeSegments % For each of the time periods
-        clear segmentedLFPData 
+        clear segmentedLFPData segmentedSpikeData
     
-        fileNameSave = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j}]);
+        fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP']);
+        fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes']);
         numTrials = length(goodIndexList{i});
         segmentedLFPData = zeros(numElectrodes,numTrials,numTimePos(j));
+        segmentedSpikeData = cell(numElectrodes,numTrials);
         
         for k=1:numTrials
             t=goodIndexList{i}(k); % Trial Number of interest
  
             if j==1
-                startPos = round(Fs*(stimulusOnTimeS{t}(1)-trialStartTimeS(t) + timePeriodS{j}(1)));
+                startPosLFP = round(Fs*(stimulusOnTimeS{t}(1)-trialStartTimeS(t) + timePeriodS{j}(1)));
+                startPosSpikes = stimulusOnTimeS{t}(1);
             elseif j==2
-                startPos = round(Fs*(stimulusOnTimeS{t}(1)-trialStartTimeS(t) + timePeriodS{j}(1))); % Find startPos for target. #TODO#
+                startPosLFP = round(Fs*(targetOnTimeMS(t)/1000 + stimulusOnTimeS{t}(1)-trialStartTimeS(t) + timePeriodS{j}(1)));
+                startPosSpikes = targetOnTimeMS(t)/1000 + stimulusOnTimeS{t}(1);
             end
         
             for n=1:numElectrodes
-                segmentedLFPData(n,k,:) = lfpData{t,n}(startPos+(1:numTimePos(j)));
+                segmentedLFPData(n,k,:) = lfpData{t,n}(startPosLFP+(1:numTimePos(j)));
+                spikeDataThisTrial = spikeData{n,1,t};
+                if ~isempty(spikeDataThisTrial)
+                    spikeTimesThisTrial = spikeDataThisTrial - startPosSpikes; % times relative to stimulus or target onset
+                    usefulSpikePos = intersect(find(spikeTimesThisTrial>=timePeriodS{j}(1)),find(spikeTimesThisTrial<timePeriodS{j}(2)));
+                    segmentedSpikeData{n,k} = spikeTimesThisTrial(usefulSpikePos);
+                end
             end
         end
         timeVals = timePeriodS{j}(1):1/Fs:timePeriodS{j}(2)-1/Fs; %#ok<NASGU>
-        save(fileNameSave,'timeVals','segmentedLFPData');
+        save(fileNameSaveLFP,'timeVals','segmentedLFPData');
+        save(fileNameSaveSpikes,'segmentedSpikeData');
     end
 end
 end
-function DAT2 = convertDATFile(DAT)
-i=1; continueFlag=1;
-while(continueFlag)
-    tnum = (['t', num2str(i)]);
-    if isfield(DAT,tnum)
-        DAT2{i} = DAT.(tnum); %#ok<AGROW> % we keep only the data about the kept trials
-        i=i+1;
-    else
-        continueFlag=0;
-    end
-end
-end
+
 function goodIndexList = getGoodIndices(CDS,DAT)
 
-DAT2 = convertDATFile(DAT); % convert DAT to DAT2
-DAT2 = DAT2(1:length(CDS)); % DAT file has 1584 entries, but the CDS file only has 1529. The last block for attLoc1 has not been used for analysis.
+[DAT2,CueOnCode] = getInfoDATFile(DAT);
+DAT2 = DAT2(1:length(CDS)); % DAT file sometimes has more entries than the CDS file. The last block for attLoc1 has not been used for analysis.
+CueOnCode = CueOnCode(1:length(CDS));
+
 %trialEndCode = cell2mat(cellfun(@(x) x.trialEnd.data, DAT2,'UniformOutput',false));
 trialEndCode = cell2mat(cellfun(@(x) x{8},CDS(:,2),'UniformOutput',false))';
 
 isValidTrial = cell2mat(cellfun(@(x) x.trial.data.validTrial,DAT2,'UniformOutput',false));
-isInstructTrial = cell2mat(cellfun(@(x) x.trial.data.instructTrial,DAT2,'UniformOutput',false));
+% isInstructTrial = cell2mat(cellfun(@(x) x.trial.data.instructTrial,DAT2,'UniformOutput',false));
+isInstructTrial = (CueOnCode>0); % Sometimes a cue is generated even if the trial is not an instruction trial. Therefore, any trial which contains the cueOn field is considered an instruction trial
 attendLoc = cell2mat(cellfun(@(x) x.trial.data.attendLoc,DAT2,'UniformOutput',false));
 isCatchTrial = cell2mat(cellfun(@(x) x.trial.data.catchTrial,DAT2,'UniformOutput',false));
 
@@ -127,8 +138,11 @@ goodIndexList{6} = find(missIndices & (isValidTrial==1) & (attendLoc==1)); % M1V
 goodIndexList{7} = find(missIndices & (isValidTrial==0) & (attendLoc==0)); % M0I
 goodIndexList{8} = find(missIndices & (isValidTrial==0) & (attendLoc==1)); % M1I
 
+goodIndexList{9} = find(hitIndices & (isValidTrial==1) & (attendLoc==2)); % HN
+goodIndexList{10} = find(missIndices & (isValidTrial==1) & (attendLoc==2)); % MN
+
 % Doing the same thing using Patrick's code
-[~, indHitLoc0, indHitLoc1,~] = getTrialTypes (CDS,1,0,0);
+[~, indHitLoc0, indHitLoc1,indHitNeutral] = getTrialTypes (CDS,1,0,0);
 catchList= arrayfun(@(x) DAT2{x}.trial.data.catchTrial(1)==1, indHitLoc0 ); % logical index of catch trials with no stimulus change
 validList= arrayfun(@(x) DAT2{x}.trial.data.validTrial(1)==1, indHitLoc0 ); % logical index of valid trials for Hit Loc 0 trials
 goodIndexList2{1} = (indHitLoc0(validList & ~catchList))'; % HOV
@@ -141,7 +155,7 @@ goodIndexList2{2} = (indHitLoc1(validList & ~catchList))'; % H1V
 invalidList= arrayfun(@(x) DAT2{x}.trial.data.validTrial(1)==0, indHitLoc1 ); % logical index of invalid trials for Hit Loc 1 trials
 goodIndexList2{4} = (indHitLoc1(invalidList & ~catchList))'; % H1I
 
-[~, indMissLoc0, indMissLoc1,~] = getTrialTypes (CDS,0,1,0);
+[~, indMissLoc0, indMissLoc1,indMissNeutral] = getTrialTypes (CDS,0,1,0);
 catchList= arrayfun(@(x) DAT2{x}.trial.data.catchTrial(1)==1, indMissLoc0 ); % logical index of catch trials with no stimulus change
 validList= arrayfun(@(x) DAT2{x}.trial.data.validTrial(1)==1, indMissLoc0 ); % logical index of valid trials for Miss Loc 0 trials
 goodIndexList2{5} = (indMissLoc0(validList & ~catchList))'; % MOV
@@ -153,6 +167,12 @@ validList= arrayfun(@(x) DAT2{x}.trial.data.validTrial(1)==1, indMissLoc1 ); % l
 goodIndexList2{6} = (indMissLoc1(validList & ~catchList))'; % M1V
 invalidList= arrayfun(@(x) DAT2{x}.trial.data.validTrial(1)==0, indMissLoc1 ); % logical index of invalid trials for Miss Loc 1 trials
 goodIndexList2{8} = (indMissLoc1(invalidList & ~catchList))'; % M1I
+
+catchList= arrayfun(@(x) DAT2{x}.trial.data.catchTrial(1)==1, indHitNeutral ); % logical index of catch trials with no stimulus change
+goodIndexList2{9} = (indHitNeutral(~catchList))'; % HN
+
+catchList= arrayfun(@(x) DAT2{x}.trial.data.catchTrial(1)==1, indMissNeutral ); % logical index of catch trials with no stimulus change
+goodIndexList2{10} = (indMissNeutral(~catchList))'; % MN
 
 if ~isequal(goodIndexList,goodIndexList2)
     error('Index Lists do not match...');
