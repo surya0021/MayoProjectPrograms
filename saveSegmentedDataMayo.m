@@ -20,7 +20,7 @@
 
 function saveSegmentedDataMayo(fileNameString,folderSourceString)
 
-if ~exist('folderSourceString','var');   folderSourceString='F:\Projects\MayoProject\';       end
+if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Fixed parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%
 saveStringConditionList = [{'H0V'} {'H1V'} {'H0I'} {'H1I'} {'M0V'} {'M1V'} {'M0I'} {'M1I'} {'HN'} {'MN'}]; % Data must be stored in this order

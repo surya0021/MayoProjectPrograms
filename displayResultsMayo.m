@@ -1,6 +1,6 @@
 function displayResultsMayo(folderSourceString)
 
-if ~exist('folderSourceString','var');   folderSourceString='F:\Projects\MayoProject\';       end
+if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
 
 % Display Options
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16; % Fonts
@@ -352,14 +352,38 @@ end
 
 function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,cStr,tpStr)
 
+disp(['Working on dataset 1 of ' num2str(length(fileNameStringTMP))]);
 [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,cStr,tpStr); % First session
 
-% if length(fileNameStringTMP)>1
-%     for i=2:length(fileNameStringTMP)
-%         [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,electrodeArrayTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tpStr);
-%         % ToDo - combine psthData with psthDataTMP and so on.
-%     end
-% end
+if length(fileNameStringTMP)>1
+    for i=2:length(fileNameStringTMP)
+        disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameStringTMP))]);
+        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,electrodeArrayTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,cStr,tpStr);
+        
+        for k=1:2 % for each array side
+            if isequal(xsFR,xsFRTMP)
+                psthData{k} = cat(2,psthData{k},psthDataTMP{k});
+                firingRates{k} = cat(2,firingRates{k},firingRatesTMP{k});
+            else
+                error('xsFR does not match');
+            end
+            if isequal(timeVals,timeValsTMP)
+                erpData{k} = cat(2,erpData{k},erpDataTMP{k});
+            else
+                error('timeVals do not match');
+            end
+            if isequal(freqVals,freqValsTMP)
+                fftData{k} = cat(2,fftData{k},fftDataTMP{k});
+                alphaData{k} = cat(2,alphaData{k},alphaDataTMP{k});
+                ssvepData{k} = cat(2,ssvepData{k},ssvepDataTMP{k});
+            else
+                error('freqVals do not match');
+            end
+            
+            electrodeArray{k} = cat(2,electrodeArray{k},electrodeArrayTMP{k});
+        end
+    end
+end
 end
 function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,cStr,tpStr)
 
@@ -381,7 +405,7 @@ for attLoc=0:1
         lfpData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_StimOnset_LFP']));
         spikeData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_StimOnset_Spikes']));
     elseif strcmp(tpStr,'TargetOnset')
-        timeRange = [-0.25 0];
+        timeRange = [-0.5 0];
         lfpData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_TargetOnset_LFP']));
         spikeData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_TargetOnset_Spikes']));
     end
@@ -396,7 +420,7 @@ else
 end
 
 for i=1:3
-    disp([fileNameString tStr num2str(i-1) cStr '_StimOnset, Stimulus repeats for Loc' num2str(i) ': ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
+    disp([fileNameString tStr num2str(i-1) cStr ', Stimulus repeats for Loc' num2str(i) ': ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
 end
 % Frequency analysis
 timeVals=lfpData{1}.timeVals;
