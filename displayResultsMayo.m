@@ -249,12 +249,52 @@ colorNamesSides = 'cm';
                 
                 plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attPos,:,:),2)),'color',colorNamesAttPos(attPos)); 
                 hold(hFFT(arraySide),'on');
+            
+                if arraySide==1
+                if attPos==3;
+                    plot(hPSTH(3),xsFR,squeeze(mean(cat(2,psthData{1}(attPos,:,:),psthData{2}(attPos,:,:)),2)),'color',colorNamesAttPos(attPos));
+                    hold(hPSTH(3),'on');
+                    
+                    plot(hERP(3),timeVals,squeeze(mean(cat(2,erpData{1}(attPos,:,:),erpData{2}(attPos,:,:)),2)),'color',colorNamesAttPos(attPos));
+                    hold(hERP(3),'on');
+                    
+                    plot(hFFT(3),freqVals,squeeze(mean(cat(2,fftData{1}(attPos,:,:),fftData{2}(attPos,:,:)),2)),'color',colorNamesAttPos(attPos));
+                    hold(hFFT(3),'on');
+                else
+                    plot(hPSTH(3),xsFR,squeeze(mean(cat(2,psthData{1}(attPos,:,:),psthData{2}(3-attPos,:,:)),2)),'color',colorNamesAttPos(attPos));
+                    hold(hPSTH(3),'on');
+                    
+                    plot(hERP(3),timeVals,squeeze(mean(cat(2,erpData{1}(attPos,:,:),erpData{2}(3-attPos,:,:)),2)),'color',colorNamesAttPos(attPos));
+                    hold(hERP(3),'on');
+                    
+                    plot(hFFT(3),freqVals,squeeze(mean(cat(2,fftData{1}(attPos,:,:),fftData{2}(3-attPos,:,:)),2)),'color',colorNamesAttPos(attPos));
+                    hold(hFFT(3),'on');
+                end
+                end
             end
             makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttPos);
             makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttPos);
             makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttPos);
+            
+        end
+       
+        for i=1:3
+            if i==3
+                firingRatesBothArrays(i,:)=cat(2,firingRates{1}(i,:),firingRates{2}(i,:));
+                alphaDataBothArrays(i,:)=cat(2,alphaData{1}(i,:),alphaData{2}(i,:));
+                ssvepDataBothArrays(i,:)=cat(2,ssvepData{1}(i,:),ssvepData{2}(i,:));
+            else
+                firingRatesBothArrays(i,:)=cat(2,firingRates{1}(i,:),firingRates{2}(3-i,:));
+                alphaDataBothArrays(i,:)=cat(2,alphaData{1}(i,:),alphaData{2}(3-i,:));
+                ssvepDataBothArrays(i,:)=cat(2,ssvepData{1}(i,:),ssvepData{2}(3-i,:));
+            end
         end
         
+         makeBarPlot(hBarFR(3),firingRatesBothArrays,colorNamesAttPos);
+         makeBarPlot(hBarAlpha(3),alphaDataBothArrays,colorNamesAttPos);
+         makeBarPlot(hBarSSVEP(3),ssvepDataBothArrays,colorNamesAttPos);
+                
+       
         % Rescale plots and set the x and y scales
         yLims = getYLims(hPSTH);
         axis(hPSTH(1),[tRange 0 yLims(2)]);
@@ -285,7 +325,9 @@ colorNamesSides = 'cm';
         for arraySide=1:2
             ylabel(hPSTH(arraySide),['N=' num2str(length(electrodeArray{arraySide}))],'color',colorNamesSides(arraySide));
         end
+        ylabel(hPSTH(3),['N=' num2str(length(electrodeArray{1})+length(electrodeArray{2}))],'color','b');
         legend(hPSTH(1),'Loc0','Loc1','Neutral');
+        legend(hPSTH(3),'Att in','Att out','Neutral');
     end
     function rescaleXY_Callback(~,~)
         tRange = [str2double(get(hStimMin,'String')) str2double(get(hStimMax,'String'))];
@@ -304,7 +346,7 @@ colorNamesSides = 'cm';
         holdOnGivenPlotHandle(hBarFR,holdOnState);
         holdOnGivenPlotHandle(hBarAlpha,holdOnState);
         holdOnGivenPlotHandle(hBarSSVEP,holdOnState);
-        
+       
         if holdOnState
             set(hElectrodes,'Nextplot','add');
         else
@@ -338,7 +380,12 @@ colorNamesSides = 'cm';
         claGivenPlotHandle(hBarFR);
         claGivenPlotHandle(hBarAlpha);
         claGivenPlotHandle(hBarSSVEP);
-        
+        showElectrodeLocationsMayo([],1:96,'w',hElectrodes,1,0);
+        legend(hPSTH(1),'off');
+        legend(hPSTH(3),'off');
+        for n=1:3
+        ylabel(hPSTH(n),'');
+        end
         function claGivenPlotHandle(plotHandles)
             [numRows,numCols] = size(plotHandles);
             for i=1:numRows
@@ -380,7 +427,7 @@ if length(fileNameStringTMP)>1
                 error('freqVals do not match');
             end
             
-            electrodeArray{k} = cat(2,electrodeArray{k},electrodeArrayTMP{k});
+            electrodeArray{k} = cat(1,electrodeArray{k},electrodeArrayTMP{k});
         end
     end
 end
@@ -420,7 +467,7 @@ else
 end
 
 for i=1:3
-    disp([fileNameString tStr num2str(i-1) cStr ', Stimulus repeats for Loc' num2str(i) ': ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
+    disp([fileNameString tStr num2str(i-1) cStr ', Stimulus repeats for Loc' num2str(i-1) ': ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
 end
 % Frequency analysis
 timeVals=lfpData{1}.timeVals;
@@ -443,10 +490,18 @@ for i=1:2 % Each array side
         end
         
         % ERP
-        erpDataTMP(attPos,:,:) = squeeze(mean(lfpData{attPos}.segmentedLFPData(eList,:,:),2));
-        
+        erp = squeeze(mean(lfpData{attPos}.segmentedLFPData(eList,:,:),2));
+        if size(erp,2)==1        
+            erp=erp';       % to preserve the dimension as elecUnits x timePoints for single electrode unit case.
+        end
+        erpDataTMP(attPos,:,:)=erp;
         % FFT
-        fftDataTMP(attPos,:,:) = log10(squeeze(mean(abs(fft(lfpData{attPos}.segmentedLFPData(eList,:,pos),[],3)),2)));
+        FFT= log10(squeeze(mean(abs(fft(lfpData{attPos}.segmentedLFPData(eList,:,pos),[],3)),2)));
+        if size(FFT,2)==1
+            FFT=FFT';
+        end
+        
+        fftDataTMP(attPos,:,:)=FFT;
         alphaDataTMP(attPos,:) = sum(fftDataTMP(attPos,:,alphaPos),3);
         ssvepDataTMP(attPos,:) = fftDataTMP(attPos,:,ssvepPos); %#ok<FNDSB>
     end
@@ -492,18 +547,35 @@ end
 function electrodeArray = getGoodElectrodes(folderSourceString,fileNameString,neuronType,populationType)
 
 % To do
-% Read the excel file sortRatings_CUonly.xls provided by Patrick. Find
-% useful electrodes using fileNameString and neuronType (SUA or MUA). 
+
 % To use populationType (all or stimulated), we need to either find the
 % center of the RFs and stimulus position, and include only electrodes
 % whose RFs were within a certain distance from the center. Otherwise, we
 % could compare baseline and stimulus firing rates and only use those
 % electrodes whose firing rates change by some threshold level.
 
-% For now, the list is hand-picked for pacu60A001, and contains all
-% electrodes that showed good firing
-electrodeArray{1} = [73 71 69 67 65 72 70 68 66 79 77 02 81 80 78 76 74 41 39 37 35 34 03 83 84 82]; % Right Array
-electrodeArray{2} = [46 50 15 17 09 11 08 90 89 55 56 57 58 52 54 19 25 12 10 92 91 94 59 60 62 21 31 29 27 20 16 22 18 96 63 61 95 32 30 28 24]; % Left Array
+sortRatings=sortRating(fileNameString,folderSourceString);
+
+[~,~,electrodeArrayPos]=electrodePositionOnGridMayo(1);
+
+sua=intersect(find(sortRatings>0),find(sortRatings<4));
+mua=find(sortRatings>3);
+all=union(sua,mua,'sorted');
+
+ if strcmp(neuronType,'SUA')
+    electrodeArray{1}=intersect(sua,electrodeArrayPos(:,8:13)); % Right Array
+    electrodeArray{2}=intersect(sua,electrodeArrayPos(:,1:6)); % Left Array
+% electrodeArray{1} = [73 71 69 67 65 72 70 68 66 79 77 02 81 80 78 76 74 41 39 37 35 34 03 83 84 82]; % Right Array
+% electrodeArray{2} = [46 50 15 17 09 11 08 90 89 55 56 57 58 52 54 19 25 12 10 92 91 94 59 60 62 21 31 29 27 20 16 22 18 96 63 61 95 32 30 28 24]; % Left Array
+ 
+ elseif strcmp(neuronType,'MUA')
+    electrodeArray{1}=intersect(mua,electrodeArrayPos(:,8:13));
+    electrodeArray{2}=intersect(mua,electrodeArrayPos(:,1:6));
+ 
+ elseif strcmp(neuronType,'All')
+     electrodeArray{1}=intersect(all,electrodeArrayPos(:,8:13));
+     electrodeArray{2}=intersect(all,electrodeArrayPos(:,1:6));
+ end
 end
 function yLims = getYLims(plotHandles)
 
@@ -540,4 +612,19 @@ for i=1:size(data,1)
     errorbar(h,i,mData(i),semData(i),'color',colorNames(i));
 end
 set(h,'XTick',[],'XTicklabel',[]);
+end
+function sortRating=sortRating(fileNameString,folderSourceString)
+
+[~,~,ratings]=xlsread(fullfile(folderSourceString,'Data','extractedData','SortRatings_CUonly'),fileNameString,'A1:A96');
+if length(ratings)~=96;
+    error('electrode numbers do not match')
+end
+
+for i=1:96
+    
+    if ischar(ratings{i})
+        ratings{i}=NaN;       % to eliminate electrodes rated as x, xx and blank.
+    end
+end
+sortRating=cell2mat(ratings);
 end
