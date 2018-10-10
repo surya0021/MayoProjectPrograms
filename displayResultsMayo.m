@@ -4,7 +4,7 @@ if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Project
 
 % Display Options
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16; % Fonts
-panelHeight = 0.175; panelStartHeight = 0.8; backgroundColor = 'w'; % Panels
+panelHeight = 0.2; panelStartHeight = 0.8; backgroundColor = 'w'; % Panels
 
 % Show electrodes
 electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
@@ -55,15 +55,15 @@ hTrialOutcome = uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
     [0.5 1-4*paramsHeight 0.5 paramsHeight], ...
     'Style','popup','String',trialOutcomeString,'FontSize',fontSizeSmall);
 
-% CueType
-cueTypeString = [{'Valid'} {'Invalid'}];
+% Orientation Change
+orientationChangeString=[{'All'} {'Selected'}];
 uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
     'Position',[0 1-5*paramsHeight 0.5 paramsHeight], ...
-    'Style','text','String','Cue Type','FontSize',fontSizeSmall);
-hCueType = uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
-    'BackgroundColor', backgroundColor, 'Position',...
+    'Style','text','String','Orientation Change','FontSize',fontSizeSmall);
+hOriChangeType = uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
+    'BackgroundColor', backgroundColor, 'Position', ...
     [0.5 1-5*paramsHeight 0.5 paramsHeight], ...
-    'Style','popup','String',cueTypeString,'FontSize',fontSizeSmall);
+    'Style','popup','String',orientationChangeString ,'FontSize',fontSizeSmall);
 
 % Analysis Interval
 analysisIntervalString = [{'Baseline'} {'StimOnset'} {'TargetOnset'}];
@@ -206,13 +206,17 @@ uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Plots
-hPSTH = getPlotHandles(3,1,[0.05 0.05 0.15 0.7],0,0.05,0); linkaxes(hPSTH);
-hERP = getPlotHandles(3,1,[0.25 0.05 0.15 0.7],0,0.05,0); linkaxes(hERP);
-hFFT = getPlotHandles(3,1,[0.45 0.05 0.15 0.7],0,0.05,0); linkaxes(hFFT);
 
-hBarFR = getPlotHandles(3,1,[0.65 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarFR);
-hBarAlpha = getPlotHandles(3,1,[0.75 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarAlpha);
-hBarSSVEP = getPlotHandles(3,1,[0.85 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarSSVEP);
+hPSTH = getPlotHandles(3,1,[0.3 0.05 0.1 0.7],0,0.05,0); linkaxes(hPSTH);
+hERP = getPlotHandles(3,1,[0.45 0.05 0.1 0.7],0,0.05,0); linkaxes(hERP);
+hFFT = getPlotHandles(3,1,[0.6 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFT);
+
+hBarFR = getPlotHandles(3,1,[0.75 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarFR);
+hBarAlpha = getPlotHandles(3,1,[0.82 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarAlpha);
+hBarSSVEP = getPlotHandles(3,1,[0.9 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarSSVEP);
+
+hBehavior(1) = subplot('Position',[0.05 0.3 0.2 0.45]);
+hBehavior(2) = subplot('Position',[0.05 0.05 0.2 0.2]); linkaxes(hBehavior);
 
 colorNamesSides = 'cm';
 
@@ -223,10 +227,10 @@ colorNamesSides = 'cm';
         n=get(hNeuronType,'val'); neuronType = neuronTypeString{n};
         p=get(hPopulationType,'val'); populationType = populationString{p};
         t=get(hTrialOutcome,'val'); tStr = trialOutcomeString{t}(1);
-        c=get(hCueType,'val'); cStr = cueTypeString{c}(1);
+        o=get(hOriChangeType,'val'); oStr=orientationChangeString{o};
         tp=get(hTimePeriodType,'val'); tpStr = analysisIntervalString{tp};
         
-        colorNamesAttPos = colorNames{get(hChooseColor,'val')};
+        colorNamesAttCue = colorNames{get(hChooseColor,'val')};
         
         if strcmp(tpStr,'TargetOnset')
             tRange = [-0.5 0.1];
@@ -235,24 +239,29 @@ colorNamesSides = 'cm';
         end
         
         % Get data
-        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,cStr,tpStr);
+        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr);
         
+        for attCuePos=1:5
+            plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o');
+            hold(hBehavior(1),'on');
+        end
+
         for arraySide=1:2
             showElectrodeLocationsMayo([],electrodeArray{arraySide},colorNamesSides(arraySide),hElectrodes,1,0); % Show electrodes used for analysis
-            
-            for attPos=1:3
-                plot(hPSTH(arraySide),xsFR,squeeze(mean(psthData{arraySide}(attPos,:,:),2)),'color',colorNamesAttPos(attPos)); 
+              
+            for attCuePos=1:5
+                plot(hPSTH(arraySide),xsFR,squeeze(mean(psthData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hPSTH(arraySide),'on');
                 
-                plot(hERP(arraySide),timeVals,squeeze(mean(erpData{arraySide}(attPos,:,:),2)),'color',colorNamesAttPos(attPos)); 
+                plot(hERP(arraySide),timeVals,squeeze(mean(erpData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hERP(arraySide),'on');
                 
-                plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attPos,:,:),2)),'color',colorNamesAttPos(attPos)); 
+                plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hFFT(arraySide),'on');
             end
-            makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttPos);
-            makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttPos);
-            makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttPos);
+            makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue);
+            makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue);
+            makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue);
         end
         
         % Rescale plots and set the x and y scales
@@ -269,9 +278,10 @@ colorNamesSides = 'cm';
         axis(hFFT(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
         set(hFFTYMin,'String',num2str(yLims(1))); set(hFFTYMax,'String',num2str(yLims(2)));
         
-        yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 4 0 yLims(2)]);
-        yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 4 yLims]);
-        yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 4 yLims]);
+        yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 0 yLims(2)]);
+        yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 6 yLims]);
+        yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 6 yLims]);
+        ylim(hBehavior(1),[0 1]);
         
         % Labels
         xlabel(hPSTH(3),'Time (s)'); title(hPSTH(1),'Firing Rate (spikes/s)');
@@ -285,7 +295,7 @@ colorNamesSides = 'cm';
         for arraySide=1:2
             ylabel(hPSTH(arraySide),['N=' num2str(length(electrodeArray{arraySide}))],'color',colorNamesSides(arraySide));
         end
-        legend(hPSTH(1),'Loc0','Loc1','Neutral');
+        legend(hBehavior(1),'0V','1V','0I','1I','N','position','southeast');
     end
     function rescaleXY_Callback(~,~)
         tRange = [str2double(get(hStimMin,'String')) str2double(get(hStimMax,'String'))];
@@ -304,6 +314,7 @@ colorNamesSides = 'cm';
         holdOnGivenPlotHandle(hBarFR,holdOnState);
         holdOnGivenPlotHandle(hBarAlpha,holdOnState);
         holdOnGivenPlotHandle(hBarSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBehavior,holdOnState);
         
         if holdOnState
             set(hElectrodes,'Nextplot','add');
@@ -338,6 +349,7 @@ colorNamesSides = 'cm';
         claGivenPlotHandle(hBarFR);
         claGivenPlotHandle(hBarAlpha);
         claGivenPlotHandle(hBarSSVEP);
+        claGivenPlotHandle(hBehavior);
         
         function claGivenPlotHandle(plotHandles)
             [numRows,numCols] = size(plotHandles);
@@ -349,16 +361,19 @@ colorNamesSides = 'cm';
         end
     end
 end
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr)
 
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,cStr,tpStr)
-
-disp(['Working on dataset 1 of ' num2str(length(fileNameStringTMP))]);
-[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,cStr,tpStr); % First session
+numDatasets = length(fileNameStringTMP);
+disp(['Working on dataset 1 of ' num2str(numDatasets)]);
+[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr); % First session
 
 if length(fileNameStringTMP)>1
-    for i=2:length(fileNameStringTMP)
+    for i=2:numDatasets
         disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameStringTMP))]);
-        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,electrodeArrayTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,cStr,tpStr);
+        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr);
+        
+        perCorrect = perCorrect + perCorrectTMP;
+        uniqueOrientationChangeDeg = uniqueOrientationChangeDeg + uniqueOrientationChangeDegTMP;
         
         for k=1:2 % for each array side
             if isequal(xsFR,xsFRTMP)
@@ -380,88 +395,114 @@ if length(fileNameStringTMP)>1
                 error('freqVals do not match');
             end
             
-            electrodeArray{k} = cat(2,electrodeArray{k},electrodeArrayTMP{k});
+            electrodeArray{k} = cat(1,electrodeArray{k},electrodeArrayTMP{k});
         end
     end
+    perCorrect = perCorrect/numDatasets;
+    uniqueOrientationChangeDeg = uniqueOrientationChangeDeg/numDatasets;
 end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,cStr,tpStr)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr)
 
-binWidthMS = 10;
-alphaRangeHz = [8 12]; ssvepFreqHz = 20;
+folderSave = fullfile(folderSourceString,'Data','savedData');
+makeDirectory(folderSave);
 
-folderName = fullfile(folderSourceString,'Data','segmentedData',fileNameString);
+fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '.mat']);
 
-electrodeArray = getGoodElectrodes(folderSourceString,fileNameString,neuronType,populationType);
-
-% Get Spike and LFP data
-for attLoc=0:1
-    if strcmp(tpStr,'Baseline')
-        timeRange = [-0.25 0];
-        lfpData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_StimOnset_LFP']));
-        spikeData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_StimOnset_Spikes']));
-    elseif strcmp(tpStr,'StimOnset')
-        timeRange = [0.25 0.5];
-        lfpData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_StimOnset_LFP']));
-        spikeData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_StimOnset_Spikes']));
-    elseif strcmp(tpStr,'TargetOnset')
-        timeRange = [-0.5 0];
-        lfpData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_TargetOnset_LFP']));
-        spikeData{attLoc+1}=load(fullfile(folderName,[fileNameString tStr num2str(attLoc) cStr '_TargetOnset_Spikes']));
-    end
-end
-
-if strcmp(tpStr,'TargetOnset')
-    lfpData{3}=load(fullfile(folderName,[fileNameString tStr 'N_TargetOnset_LFP']));
-    spikeData{3}=load(fullfile(folderName,[fileNameString tStr 'N_TargetOnset_Spikes']));
+if exist(fileToSave,'file')
+    disp(['Loading file ' fileToSave]);
+    load(fileToSave);
 else
-    lfpData{3}=load(fullfile(folderName,[fileNameString tStr 'N_StimOnset_LFP']));
-    spikeData{3}=load(fullfile(folderName,[fileNameString tStr 'N_StimOnset_Spikes']));
-end
-
-for i=1:3
-    disp([fileNameString tStr num2str(i-1) cStr ', Stimulus repeats for Loc' num2str(i) ': ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
-end
-% Frequency analysis
-timeVals=lfpData{1}.timeVals;
-Fs = round(1/(timeVals(2)-timeVals(1)));
-pos = find(timeVals>=timeRange(1),1)+ (0:diff(timeRange)*Fs-1);
-freqVals = 0:1/(diff(timeRange)):Fs-1/(diff(timeRange));
-
-alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
-ssvepPos = find(freqVals==ssvepFreqHz);
-
-for i=1:2 % Each array side
-    eList = electrodeArray{i};
     
-    clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP
-    for attPos=1:3
-        % Firing Rates
-        for k=1:length(eList)
-            [psthDataTMP(attPos,k,:),xsFR] = getPSTH(spikeData{attPos}.segmentedSpikeData(eList(k),:),binWidthMS,[timeVals(1) timeVals(end)]);
-            firingRatesTMP(attPos,k) = mean(getSpikeCounts(spikeData{attPos}.segmentedSpikeData(eList(k),:),timeRange))/diff(timeRange);
+    binWidthMS = 10;
+    alphaRangeHz = [8 12]; ssvepFreqHz = 20;
+    
+    folderName = fullfile(folderSourceString,'Data','segmentedData',fileNameString);
+    
+    electrodeArray = getGoodElectrodes(folderSourceString,fileNameString,neuronType,populationType);
+    
+    % Get Spike and LFP data for 5 conditions - 0V, 1V, 0I, 1I and N
+    attCueList = [{'0V'} {'1V'} {'0I'} {'1I'} {'N'}];
+    numConditions = length(attCueList);
+    
+    for i=1:numConditions
+        if strcmp(tpStr,'Baseline')
+            timeRange = [-0.25 0];
+            lfpData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_StimOnset_LFP']));
+            spikeData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_StimOnset_Spikes']));
+        elseif strcmp(tpStr,'StimOnset')
+            timeRange = [0.25 0.5];
+            lfpData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_StimOnset_LFP']));
+            spikeData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_StimOnset_Spikes']));
+        elseif strcmp(tpStr,'TargetOnset')
+            timeRange = [-0.5 0];
+            lfpData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_TargetOnset_LFP']));
+            spikeData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_TargetOnset_Spikes']));
         end
-        
-        % ERP
-        erpDataTMP(attPos,:,:) = squeeze(mean(lfpData{attPos}.segmentedLFPData(eList,:,:),2));
-        
-        % FFT
-        fftDataTMP(attPos,:,:) = log10(squeeze(mean(abs(fft(lfpData{attPos}.segmentedLFPData(eList,:,pos),[],3)),2)));
-        alphaDataTMP(attPos,:) = sum(fftDataTMP(attPos,:,alphaPos),3);
-        ssvepDataTMP(attPos,:) = fftDataTMP(attPos,:,ssvepPos); %#ok<FNDSB>
     end
     
-    psthData{i} = psthDataTMP;
-    firingRates{i} = firingRatesTMP; 
-    erpData{i} = erpDataTMP;
-    fftData{i} = fftDataTMP;
-    alphaData{i} = alphaDataTMP;
-    ssvepData{i} = ssvepDataTMP;
+    [perCorrect,uniqueOrientationChangeDeg,goodIndexList,orientationChangeDeg] = getBehavior(fileNameString,folderSourceString);
+    if strcmp(tStr,'H')
+        goodList = [goodIndexList(1:4) goodIndexList(9)]; % Hit conditions for 0V, 1V, 0I, 1I and M
+    else
+        goodList = [goodIndexList(5:8) goodIndexList(10)]; % Miss conditions for 0V, 1V, 0I, 1I and M
+    end
+    
+    for i=1:numConditions
+        if strcmp(oStr,'Selected') % only select trials for which 2nd and 3rd orientation changes occured
+            allOrientationsThisCondition = orientationChangeDeg(goodList{i});
+            selectedPos = sort([find(allOrientationsThisCondition==uniqueOrientationChangeDeg(2)) find(allOrientationsThisCondition==uniqueOrientationChangeDeg(3))]);
+            lfpData{i}.segmentedLFPData = lfpData{i}.segmentedLFPData(:,selectedPos,:);
+            spikeData{i}.segmentedSpikeData = spikeData{i}.segmentedSpikeData(:,selectedPos);
+        end
+        disp([fileNameString tStr attCueList{i} ', Stimulus repeats: ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
+    end
+    % Frequency analysis
+    timeVals=lfpData{1}.timeVals;
+    Fs = round(1/(timeVals(2)-timeVals(1)));
+    pos = find(timeVals>=timeRange(1),1)+ (0:diff(timeRange)*Fs-1);
+    freqVals = 0:1/(diff(timeRange)):Fs-1/(diff(timeRange));
+    
+    alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
+    ssvepPos = find(freqVals==ssvepFreqHz);
+    
+    for i=1:2 % Each array side
+        eList = electrodeArray{i};
+        
+        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP
+        for j=1:numConditions
+            % Firing Rates
+            for k=1:length(eList)
+                [psthDataTMP(j,k,:),xsFR] = getPSTH(spikeData{j}.segmentedSpikeData(eList(k),:),binWidthMS,[timeVals(1) timeVals(end)]);
+                firingRatesTMP(j,k) = mean(getSpikeCounts(spikeData{j}.segmentedSpikeData(eList(k),:),timeRange))/diff(timeRange);
+            end
+            
+            % ERP
+            erpDataTMP(j,:,:) = squeeze(mean(lfpData{j}.segmentedLFPData(eList,:,:),2));
+            
+            % FFT
+            fftDataTMP(j,:,:) = log10(squeeze(mean(abs(fft(lfpData{j}.segmentedLFPData(eList,:,pos),[],3)),2)));
+            alphaDataTMP(j,:) = sum(fftDataTMP(j,:,alphaPos),3);
+            ssvepDataTMP(j,:) = fftDataTMP(j,:,ssvepPos); %#ok<FNDSB>
+        end
+        
+        psthData{i} = psthDataTMP;
+        firingRates{i} = firingRatesTMP;
+        erpData{i} = erpDataTMP;
+        fftData{i} = fftDataTMP;
+        alphaData{i} = alphaDataTMP;
+        ssvepData{i} = ssvepDataTMP;
+    end
+    
+    % Save data
+    save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
 end
 end
 function [colorString, colorNames] = getColorString
-colorNames{1} = 'brg'; colorString{1} = 'BlueRedGreen';
-colorNames{2} = 'cmy'; colorString{2} = 'CyanMagentaYellow';
+colorNames{1} = [0 0 1; 1 0 0; 0 1 1; 1 0 1; 0 1 0]; colorString{1} = 'BlueRedCyanMagentaGreen';
+colorNames{2} = gray(6); colorString{2} = 'gray';
+colorNames{3} = copper(6); colorString{3} = 'copper';
+colorNames{4} = jet(5); colorString{4} = 'jet';
 end
 function [fileNameStringAll,fileNameStringListArray] = getFileNameStringList
 
@@ -491,19 +532,42 @@ fileNameStringListArray{pos} = allNames;
 end
 function electrodeArray = getGoodElectrodes(folderSourceString,fileNameString,neuronType,populationType)
 
-% To do
-% Read the excel file sortRatings_CUonly.xls provided by Patrick. Find
-% useful electrodes using fileNameString and neuronType (SUA or MUA). 
-% To use populationType (all or stimulated), we need to either find the
-% center of the RFs and stimulus position, and include only electrodes
-% whose RFs were within a certain distance from the center. Otherwise, we
-% could compare baseline and stimulus firing rates and only use those
-% electrodes whose firing rates change by some threshold level.
+suaCutoff = 3;
+% Get sorting rating
+sortRatings=sortRating(fileNameString,folderSourceString);
+sua=intersect(find(sortRatings>0),find(sortRatings<=suaCutoff));
+mua=find(sortRatings>suaCutoff);
+all=union(sua,mua,'sorted');
 
-% For now, the list is hand-picked for pacu60A001, and contains all
-% electrodes that showed good firing
-electrodeArray{1} = [73 71 69 67 65 72 70 68 66 79 77 02 81 80 78 76 74 41 39 37 35 34 03 83 84 82]; % Right Array
-electrodeArray{2} = [46 50 15 17 09 11 08 90 89 55 56 57 58 52 54 19 25 12 10 92 91 94 59 60 62 21 31 29 27 20 16 22 18 96 63 61 95 32 30 28 24]; % Left Array
+[~,~,electrodeArrayPos]=electrodePositionOnGridMayo(1);
+
+spkData{1}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H1V_StimOnset_Spikes']));
+spkData{2}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H0V_StimOnset_Spikes']));
+ 
+ if strcmp(neuronType,'SUA')
+    electrodeArray{1}=intersect(sua,electrodeArrayPos(:,8:13)); % Right Array
+    electrodeArray{2}=intersect(sua,electrodeArrayPos(:,1:6)); % Left Array
+
+ elseif strcmp(neuronType,'MUA')
+    electrodeArray{1}=intersect(mua,electrodeArrayPos(:,8:13));
+    electrodeArray{2}=intersect(mua,electrodeArrayPos(:,1:6));
+ 
+ elseif strcmp(neuronType,'All')
+     electrodeArray{1}=intersect(all,electrodeArrayPos(:,8:13));
+     electrodeArray{2}=intersect(all,electrodeArrayPos(:,1:6));
+ end
+ 
+ if strcmp(populationType,'Stimulated')
+     for j=1:2 %for each array
+         elecList=electrodeArray{j}(:);
+         for k=1:length(elecList)
+             FRBl(j,k) =mean(getSpikeCounts(spkData{j}.segmentedSpikeData(elecList(k),:),[-0.25 0]))/diff([-0.25 0]);
+             FRSt(j,k) =mean(getSpikeCounts(spkData{j}.segmentedSpikeData(elecList(k),:),[0.25 0.5]))/diff([0.25 0.5]);
+         end
+         delFR{j}=FRSt(j,:)-FRBl(j,:);
+         electrodeArray{j}=elecList(find(delFR{j}>5)); %#ok<FNDSB> % Threshold for choosing stimulated units is 5 spikes/s
+     end
+ end
 end
 function yLims = getYLims(plotHandles)
 
@@ -535,9 +599,23 @@ mData = mean(data,2);
 semData = std(data,[],2)/sqrt(N);
 
 for i=1:size(data,1)
-    plot(h,i,mData(i),'color',colorNames(i),'marker','o');
+    plot(h,i,mData(i),'color',colorNames(i,:),'marker','o');
     hold(h,'on');
-    errorbar(h,i,mData(i),semData(i),'color',colorNames(i));
+    errorbar(h,i,mData(i),semData(i),'color',colorNames(i,:));
 end
 set(h,'XTick',[],'XTicklabel',[]);
+end
+function sortRating=sortRating(fileNameString,folderSourceString)
+
+[~,~,ratings]=xlsread(fullfile(folderSourceString,'Data','extractedData','SortRatings_CUonly'),fileNameString,'A1:A96');
+if length(ratings)~=96;
+    error('electrode numbers do not match')
+end
+
+for i=1:96
+    if ischar(ratings{i})
+        ratings{i}=NaN;       % to eliminate electrodes rated as x, xx and blank.
+    end
+end
+sortRating=cell2mat(ratings);
 end

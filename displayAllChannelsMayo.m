@@ -1,7 +1,7 @@
 % Display All Channels
 function displayAllChannelsMayo(fileNameString,folderSourceString)
 
-if ~exist('folderSourceString','var');   folderSourceString='F:\Projects\MayoProject\';       end
+if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
 
 % Folders and file names
 folderName = fullfile(folderSourceString,'Data','segmentedData',fileNameString);

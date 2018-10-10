@@ -2,13 +2,11 @@ function [fileNameStringList,monkeyNameList] = getAttentionExperimentDetails
 
 % Arturo
 monkeyNameList{1} = 'arturo';
-% sessionNumberList{1} = [53:63 73:75];
-sessionNumberList{1} = [61:63 73:75]; % Rest of the data is unavailable
+sessionNumberList{1} = [53 55:58 60:63 73:75]; % 54 and 59 unavailable
 
 % Wiggin
 monkeyNameList{2} = 'wiggin';
-%sessionNumberList{2} = [53 55 57 58 60 62 64 65 69 70 72 73]; %
-sessionNumberList{2} = [58 60 62 64 65 70 72 73]; % Rest of the data is unavailable
+sessionNumberList{2} = [53 55 57 58 60 62 64 65 69 70 72 73];
 
 fileNameStringList = cell(1,2);
 for i=1:2
