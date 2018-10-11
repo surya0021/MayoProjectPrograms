@@ -18,9 +18,10 @@
 
 % Further, we save data around two events of interest: first stimulus and the target.
 
-function saveSegmentedDataMayo(fileNameString,folderSourceString)
+function saveSegmentedDataMayo(fileNameString,folderSourceString,instructionTrialFlag)
 
 if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
+if ~exist('instructionTrialFlag','var');    instructionTrialFlag=0;     end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Fixed parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%
 saveStringConditionList = [{'H0V'} {'H1V'} {'H0I'} {'H1I'} {'M0V'} {'M1V'} {'M0I'} {'M1I'} {'HN'} {'MN'}]; % Data must be stored in this order
@@ -46,7 +47,11 @@ display([fileNameDAT ' loaded....']);
 
 fileNameLFP = strcat(fileNameString, '_extractedTrialsLFP');
 lfpData = load(fullfile(folderNameIn,fileNameLFP));
-lfpData = lfpData.(fileNameLFP); % dimension: trials x channels (each cell is an array of the voltage values for the specific trial and channel)
+if isfield(lfpData,fileNameLFP)
+    lfpData = lfpData.(fileNameLFP); % dimension: trials x channels (each cell is an array of the voltage values for the specific trial and channel)
+else
+    lfpData = lfpData.extractedTrialsLFP;
+end
 display([fileNameLFP ' file loaded.....']);
 
 fileNameSpikes = strcat(fileNameString, '_Spikes');
@@ -55,7 +60,7 @@ spikeData = spikeData.(fileNameSpikes); % dimension: trials x channels (each cel
 display([fileNameSpikes ' file loaded.....']);
 
 %%%%%%%%%%%%%%%%%%%%%%%% Find appropriate indices %%%%%%%%%%%%%%%%%%%%%%%%%
-goodIndexList = getGoodIndices(CDS,DAT); % Get Indices for the 10 categories
+goodIndexList = getGoodIndices(CDS,DAT,instructionTrialFlag); % Get Indices for the 10 categories
 trialStartTimeS = cell2mat(cellfun(@(x) x{1}, CDS(:,1),'UniformOutput',false ));
 stimulusOnTimeS = cellfun(@(x) x{5}, CDS(:,1),'UniformOutput',false); % still under cell format. dimension: trials x 1 (in the first and only columnm there are cells containing all the trial start times for the corresponding trial
 %saccadeTimeS = cell2mat(cellfun(@(x) x{7}, CDS(:,1),'UniformOutput',false));
@@ -75,8 +80,13 @@ for i=1:length(goodIndexList) % For each of the 10 conditions
     for j=1:numTimeSegments % For each of the time periods
         clear segmentedLFPData segmentedSpikeData
     
-        fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP']);
-        fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes']);
+        if ~instructionTrialFlag
+            fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP']);
+            fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes']);
+        else
+            fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP_Instruct']);
+            fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes_Instruct']);
+        end
         numTrials = length(goodIndexList{i});
         segmentedLFPData = zeros(numElectrodes,numTrials,numTimePos(j));
         segmentedSpikeData = cell(numElectrodes,numTrials);

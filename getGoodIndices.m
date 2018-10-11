@@ -1,4 +1,8 @@
-function goodIndexList = getGoodIndices(CDS,DAT)
+% instructionTrialFlag - 1 generates the indices for intructionTrials
+
+function goodIndexList = getGoodIndices(CDS,DAT,instructionTrialFlag)
+
+if ~exist('instructionTrialFlag','var');    instructionTrialFlag=0;     end
 
 [DAT2,CueOnCode] = getInfoDATFile(DAT);
 DAT2 = DAT2(1:length(CDS)); % DAT file sometimes has more entries than the CDS file. The last block for attLoc1 has not been used for analysis.
@@ -14,14 +18,14 @@ attendLoc = cell2mat(cellfun(@(x) x.trial.data.attendLoc,DAT2,'UniformOutput',fa
 isCatchTrial = cell2mat(cellfun(@(x) x.trial.data.catchTrial,DAT2,'UniformOutput',false));
 
 % Hit Trials
-hitIndices = (trialEndCode==0) & (isInstructTrial==0) & (isCatchTrial==0);
+hitIndices = (trialEndCode==0) & (isInstructTrial==instructionTrialFlag) & (isCatchTrial==0);
 goodIndexList{1} = find(hitIndices & (isValidTrial==1) & (attendLoc==0)); % H0V
 goodIndexList{2} = find(hitIndices & (isValidTrial==1) & (attendLoc==1)); % H1V
 goodIndexList{3} = find(hitIndices & (isValidTrial==0) & (attendLoc==0)); % H0I
 goodIndexList{4} = find(hitIndices & (isValidTrial==0) & (attendLoc==1)); % H1I
 
 % Miss Trials
-missIndices = (trialEndCode==2) & (isInstructTrial==0) & (isCatchTrial==0);
+missIndices = (trialEndCode==2) & (isInstructTrial==instructionTrialFlag) & (isCatchTrial==0);
 goodIndexList{5} = find(missIndices & (isValidTrial==1) & (attendLoc==0)); % M0V
 goodIndexList{6} = find(missIndices & (isValidTrial==1) & (attendLoc==1)); % M1V
 goodIndexList{7} = find(missIndices & (isValidTrial==0) & (attendLoc==0)); % M0I
@@ -63,7 +67,9 @@ goodIndexList2{9} = (indHitNeutral(~catchList))'; % HN
 catchList= arrayfun(@(x) DAT2{x}.trial.data.catchTrial(1)==1, indMissNeutral ); % logical index of catch trials with no stimulus change
 goodIndexList2{10} = (indMissNeutral(~catchList))'; % MN
 
-if ~isequal(goodIndexList,goodIndexList2)
-    error('Index Lists do not match...');
+if ~instructionTrialFlag
+    if ~isequal(goodIndexList,goodIndexList2)
+        error('Index Lists do not match...');
+    end
 end
 end
