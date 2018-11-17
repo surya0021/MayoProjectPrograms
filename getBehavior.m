@@ -1,35 +1,36 @@
-% This function gives the detection performance(%correct) in one session of
-% left,right or both the visual fields
-% side: 0-left,1-right,2-Both.
+function [perCorrect,uniqueOrientationChangeDeg,goodIndexList,orientationChangeDeg] = getBehavior(fileNameString,folderSourceString)
 
+if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
 
-function percorrect=getBehavior(fileNameString,side)
-cue=[{'V'} {'I'}];
-for attCond=1:3
-    if attCond==3
-        conditionString=[{'HN'} {'MN'}];
-    else
-        if side==0
-            conditionString=[{['H0' cue{attCond}]} {['M0' cue{attCond}]}];
-        elseif side==1
-            conditionString=[{['H1' cue{attCond}]} {['M1' cue{attCond}]}];
-        elseif side==2
-            conditionString=[{['H0' cue{attCond}]} {['M0' cue{attCond}]} {['H1' cue{attCond}]} {['M1' cue{attCond}]}];
-        end
+folderNameIn = fullfile(folderSourceString,'Data','extractedData');
+
+fileNameCDS = [fileNameString '_Codes'];
+CDS = load(fullfile(folderNameIn,fileNameCDS));
+CDS = CDS.(fileNameCDS);
+
+fileNameDAT = strcat(fileNameString, '_DAT');
+DAT = load(fullfile(folderNameIn,fileNameDAT));
+DAT = DAT.(fileNameDAT);
+
+goodIndexList = getGoodIndices(CDS,DAT);
+[~,~,~,orientationChangeDeg,~] = getInfoDATFile(DAT);
+
+uniqueOrientationChangeDeg = unique(orientationChangeDeg);
+
+numConditions = length(goodIndexList);
+numOrientations = length(uniqueOrientationChangeDeg);
+
+responseMatrix = zeros(numConditions,numOrientations);
+for i=1:numConditions
+    x = orientationChangeDeg(goodIndexList{i});
+    for j=1:numOrientations
+        responseMatrix(i,j) = length(find(x==uniqueOrientationChangeDeg(j)));
     end
-    hit=zeros(1,6);
-    miss=zeros(1,6);
-    for j=1:length(conditionString)
-        for k=1:6
-            goodPos{k}=getGoodTrials(fileNameString,conditionString{j},k); %#ok<AGROW>
-            nPos(k)=length(goodPos{k}); %#ok<AGROW>
-        end
-        if bitget(j,1)
-            hit=hit+nPos;
-        else
-            miss=miss+nPos;
-        end
-    end
-    percorrect(attCond,:)=(hit./(hit+miss))*100; %#ok<AGROW>
 end
+
+perCorrect = zeros(5,numOrientations); % order: 0V, 1V, 0I, 1I, N
+for i=1:4
+    perCorrect(i,:) = responseMatrix(i,:) ./ (responseMatrix(i,:)+responseMatrix(i+4,:));
+end
+perCorrect(5,:) = responseMatrix(9,:) ./ (responseMatrix(9,:)+responseMatrix(10,:));
 end
