@@ -1,8 +1,8 @@
-function plotHandle = showElectrodeLocationsMayo(gridPosition,highlightElectrodes,colorNames,plotHandle,holdOnState,hideElectrodeNums)
+function plotHandle = showElectrodeLocationsMayo(gridPosition,highlightElectrodes,colorNames,plotHandle,holdOnState,hideElectrodeNums,monkeyName)
 
 if ~exist('hideElectrodeNums','var');    hideElectrodeNums=0;           end
-
-[~,~,electrodeArray] = electrodePositionOnGridMayo(1);
+if ~exist('monkeyName','var');           monkeyName='a';                end
+[~,~,electrodeArray] = electrodePositionOnGridMayo(1,monkeyName);
 [numRows,numCols] = size(electrodeArray);
 
 if ~exist('plotHandle','var') || isempty(plotHandle)
@@ -35,7 +35,7 @@ if ~isempty(highlightElectrodes)
     for i=1:length(highlightElectrodes)
         highlightElectrode=highlightElectrodes(i);
         
-        [highlightRow,highlightCol,electrodeArray] = electrodePositionOnGridMayo(highlightElectrode);
+        [highlightRow,highlightCol,electrodeArray] = electrodePositionOnGridMayo(highlightElectrode,monkeyName);
 
         % Create patch
         patchX = (highlightCol-1)*dX;
@@ -50,7 +50,7 @@ if ~isempty(highlightElectrodes)
         end
     end
 else
-    [~,~,electrodeArray] = electrodePositionOnGridMayo(1);
+    [~,~,electrodeArray] = electrodePositionOnGridMayo(1,monkeyName);
 end
 
 % Write electrode numbers
