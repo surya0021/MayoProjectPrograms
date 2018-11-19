@@ -207,16 +207,20 @@ uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
 
 % Plots
 
-hPSTH = getPlotHandles(3,1,[0.3 0.05 0.1 0.7],0,0.05,0); linkaxes(hPSTH);
-hERP = getPlotHandles(3,1,[0.45 0.05 0.1 0.7],0,0.05,0); linkaxes(hERP);
-hFFT = getPlotHandles(3,1,[0.6 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFT);
+hPSTH = getPlotHandles(3,1,[0.16 0.05 0.1 0.7],0,0.05,0); linkaxes(hPSTH);
+hERP = getPlotHandles(3,1,[0.28 0.05 0.1 0.7],0,0.05,0); linkaxes(hERP);
+hFFT = getPlotHandles(3,1,[0.4 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFT);
+hFFC = getPlotHandles(3,1,[0.52 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFC);
+hSFC = getPlotHandles(3,1,[0.64 0.05 0.1 0.7],0,0.05,0); linkaxes(hSFC);
 
-hBarFR = getPlotHandles(3,1,[0.75 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarFR);
-hBarAlpha = getPlotHandles(3,1,[0.82 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarAlpha);
-hBarSSVEP = getPlotHandles(3,1,[0.9 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarSSVEP);
 
-hBehavior(1) = subplot('Position',[0.05 0.3 0.2 0.45]);
-hBehavior(2) = subplot('Position',[0.05 0.05 0.2 0.2]); linkaxes(hBehavior);
+hBarFR = getPlotHandles(3,1,[0.76 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarFR);
+hBarRsc = getPlotHandles(3,1,[0.82 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarRsc);
+hBarAlpha = getPlotHandles(3,1,[0.88 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarAlpha);
+hBarSSVEP = getPlotHandles(3,1,[0.94 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarSSVEP);
+
+hBehavior(1) = subplot('Position',[0.03 0.3 0.1 0.45]);
+hBehavior(2) = subplot('Position',[0.03 0.05 0.1 0.2]); linkaxes(hBehavior);
 
 colorNamesSides = 'cm';
 
@@ -287,8 +291,11 @@ colorNamesSides = 'cm';
         xlabel(hPSTH(3),'Time (s)'); title(hPSTH(1),'Firing Rate (spikes/s)');
         xlabel(hERP(3),'Time (s)'); title(hERP(1),'ERP (\muV)');
         xlabel(hFFT(3),'Frequency (Hz)'); title(hFFT(1),'Log FFT');
+        xlabel(hFFC(3),'Frequency (Hz)'); title(hFFC(1),'FFC');
+        xlabel(hSFC(3),'Frequency (Hz)'); title(hSFC(1),'SFC');
         
         title(hBarFR(1),'Firing Rate');
+        title(hBarRsc(1),'r_s_c');
         title(hBarAlpha(1),'Alpha');
         title(hBarSSVEP(1),'SSVEP');
         
