@@ -262,7 +262,7 @@ colorNamesSides = 'cm';
         tapers = [1 1];
         
         % Get data
-        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers);
+        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers);
         
         for attCuePos=1:5
             plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o'); axis tight;
@@ -390,16 +390,16 @@ colorNamesSides = 'cm';
         end
     end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers)
 
 numDatasets = length(fileNameStringTMP);
 disp(['Working on dataset 1 of ' num2str(numDatasets)]);
-[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers); % First session
+[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers); % First session
 
 if length(fileNameStringTMP)>1
     for i=2:numDatasets
         disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameStringTMP))]);
-        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers);
+        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers);
         
         perCorrect = perCorrect + perCorrectTMP;
         uniqueOrientationChangeDeg = uniqueOrientationChangeDeg + uniqueOrientationChangeDegTMP;
@@ -420,12 +420,16 @@ if length(fileNameStringTMP)>1
                 fftData{k} = cat(2,fftData{k},fftDataTMP{k});
                 alphaData{k} = cat(2,alphaData{k},alphaDataTMP{k});
                 ssvepData{k} = cat(2,ssvepData{k},ssvepDataTMP{k});
+            else
+                error('freqVals do not match');
+            end
+            if isequal(freqValsMT,freqValsMTTMP)
                 ffcData{k} = cat(2,ffcData{k},ffcDataTMP{k});
                 ffPhiData{k} = cat(2,ffPhiData{k},ffPhiDataTMP{k});
                 sfcData{k} = cat(2,sfcData{k},sfcDataTMP{k});
                 sfPhiData{k} = cat(2,sfPhiData{k},sfPhiDataTMP{k});
             else
-                error('freqVals do not match');
+                error('freqValsMT do not match')
             end
             
             
@@ -436,13 +440,13 @@ if length(fileNameStringTMP)>1
     uniqueOrientationChangeDeg = uniqueOrientationChangeDeg/numDatasets;
 end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers)
 
 folderSave = fullfile(folderSourceString,'Data','savedData');
 makeDirectory(folderSave);
 
 fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '.mat']);
-coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr 'tapers_',tapers(1) '.mat']);
+coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_tapers_',num2str(tapers(1)) '.mat']);
 
 if exist(fileToSave,'file')&& exist(coherencyFileToSave,'file')
     disp(['Loading file ' fileToSave]);
@@ -527,8 +531,10 @@ else
             
             % Coherency and Spike-LFP Phase Analysis (FFC,SFC,sfPhi)
             disp(['numArray:' num2str(i) ', numCondition:' num2str(j)]);
-            [ffcTMP(j,:,:,:),ffPhiTMP(j,:,:,:),freqFFC,sfcTMP(j,:,:,:),sfPhiTMP(j,:,:,:),freqSFC] = getCoherencyMeasures(lfpData{j}.segmentedLFPData(:,:,pos),spikeData{j}.segmentedSpikeData,ePairList,tapers,lfpData{j}.timeVals(pos),timeRange,freqVals);
-            
+            [ffcTMP(j,:,:),ffPhiTMP(j,:,:),sfcTMP(j,:,:),sfPhiTMP(j,:,:),freqValsMT] = getCoherencyMeasures(lfpData{j}.segmentedLFPData(:,:,pos),spikeData{j}.segmentedSpikeData,ePairList,tapers,lfpData{j}.timeVals(pos),timeRange);
+%             if all(freqValsMTTMP == freqValsMTTMP(1,1,:))
+%                 freqValsMTTMP = freqValsMTTMP(1,1,:);
+%             end
         end
         
         psthData{i} = psthDataTMP;
@@ -542,11 +548,16 @@ else
         ffPhiData{i} = ffPhiTMP;
         sfcData{i} = sfcTMP;
         sfPhiData{i} = sfPhiTMP;
+%         freqValsMT{i} = freqValsMTTMP;
+        
+%         if all(freqValsMT == freqValsMT{1})
+%             freqValsMT = freqValsMT{1};
+%         end
     end
     
     % Save data
     save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
-    save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqVals');
+    save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT');
 end
 end
 function [colorString, colorNames] = getColorString
@@ -634,7 +645,7 @@ end
 electrodePairsAcrossHemispheres = setdiff(combnk([electrodeArray{1}; electrodeArray{2}],2),[electrodepairsWithinHemisphere{1};electrodepairsWithinHemisphere{2}],'rows');
     
 end
-function [ffc,ffPhi,freqFFC,sfc,sfPhi,freqSFC,N] = getCoherencyMeasures(lfpData,spikeData,electrodePair,tapers,timeVals,timeRange,freqVals)
+function [ffc,ffPhi,sfc,sfPhi,freqValsMT,N] = getCoherencyMeasures(lfpData,spikeData,electrodePair,tapers,timeVals,timeRange)
 
 % Set up MT
 Fs              = round(1/(timeVals(2)-timeVals(1)));
@@ -655,7 +666,7 @@ disp(['FFC ElectrodePair:',num2str(i)]);
 lfp1 = squeeze(lfpData(electrodePair(i,1),:,:));
 lfp2 = squeeze(lfpData(electrodePair(i,2),:,:));
 
-[ffc(i,:,:),ffPhi(i,:,:),S12_ffc(i,:,:),S1_ffc(i,:,:),S2_ffc(i,:,:),freqFFC]=coherencyc(lfp1',lfp2',params); %#ok<ASGLU,*AGROW>
+[ffc(i,:),ffPhi(i,:),S12_ffc(i,:),S1_ffc(i,:),S2_ffc(i,:),freqFFC]=coherencyc(lfp1',lfp2',params); %#ok<ASGLU,*AGROW>
 end
 
 % if params.trialave = 0;
@@ -671,11 +682,12 @@ clear lfp spk
 disp(['SFC ElectrodePair:',num2str(i)]);
 lfp = squeeze(lfpData(electrodePair(i,1),:,:));
 spk = convertSpikeTimes2Bins(spikeData(electrodePair(i,2),:,:),timeRange,1000/Fs);
-[sfc(i,:,:),sfPhi(i,:,:),S12_sfc(i,:,:),S1_sfc(i,:,:),S2_sfc(i,:,:),freqSFC]=coherencycpb(lfp',spk,params); %#ok<ASGLU,*AGROW>
+[sfc(i,:),sfPhi(i,:),S12_sfc(i,:),S1_sfc(i,:),S2_sfc(i,:),freqSFC]=coherencycpb(lfp',spk,params); %#ok<ASGLU,*AGROW>
 end
 
 % Sanity Check
-if isequal(freqFFC,freqSFC,freqVals)
+if isequal(freqFFC,freqSFC) %,freqVals(1:26)
+    freqValsMT = freqFFC;
 else
     error('freqVals from fft & multitaper do not match!')
 end
