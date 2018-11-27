@@ -262,7 +262,7 @@ colorNamesSides = 'cm';
         tapers = [1 1];
         
         % Get data
-        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers);
+        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers);
         
         for attCuePos=1:5
             plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o'); axis tight;
@@ -390,16 +390,16 @@ colorNamesSides = 'cm';
         end
     end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers)
 
 numDatasets = length(fileNameStringTMP);
 disp(['Working on dataset 1 of ' num2str(numDatasets)]);
-[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers); % First session
+[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers); % First session
 
 if length(fileNameStringTMP)>1
     for i=2:numDatasets
         disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameStringTMP))]);
-        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,rSCDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers);
+        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,ampCorrDataTMP,rSCDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers);
         
         perCorrect = perCorrect + perCorrectTMP;
         uniqueOrientationChangeDeg = uniqueOrientationChangeDeg + uniqueOrientationChangeDegTMP;
@@ -424,6 +424,7 @@ if length(fileNameStringTMP)>1
                 fftData{k} = cat(2,fftData{k},fftDataTMP{k});
                 alphaData{k} = cat(2,alphaData{k},alphaDataTMP{k});
                 ssvepData{k} = cat(2,ssvepData{k},ssvepDataTMP{k});
+                ampCorrData{k} = cat(2,ampCorrData{k},ampCorrDataTMP{k});
             else
                 error('freqVals do not match');
             end
@@ -446,7 +447,7 @@ if length(fileNameStringTMP)>1
     uniqueOrientationChangeDeg = uniqueOrientationChangeDeg/numDatasets;
 end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers)
 
 folderSave = fullfile(folderSourceString,'Data','savedData');
 makeDirectory(folderSave);
@@ -518,7 +519,8 @@ else
     for i=1:2 % Each array side
         eList = electrodeArray{i};
         ePairList = electrodepairsWithinHemisphere{i};
-        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP ffcTMP ffPhiTMP sfcTMP sfPhiTMP rSCTMP
+        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP ampCorrTMP rSCTMP 
+        clear ffcTMP ffPhiTMP sfcTMP sfPhiTMP 
         for j=1:numConditions
             % Firing Rates
             for k=1:length(eList)
@@ -534,10 +536,11 @@ else
             alphaDataTMP(j,:) = sum(fftDataTMP(j,:,alphaPos),3);
             ssvepDataTMP(j,:) = fftDataTMP(j,:,ssvepPos); %#ok<FNDSB>
             
+            % Amplitude Correlation
+            ampCorrTMP(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),ePairList); 
+            
             % Spike-count Correlation (rSC)
-            for k=1:length(ePairList)
-                [~,~,rSCTMP(j,k),~] = getCCG(spikeData{j}.segmentedSpikeData(ePairList(k,1),:),spikeData{j}.segmentedSpikeData(ePairList(k,2),:),timeRange,1000/Fs);
-            end
+            rSCTMP(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,ePairList,timeRange,1000/Fs);
             
             % Coherency and Spike-LFP Phase Analysis Within Hemisphere(FFC,SFC,sfPhi)
             disp(['numArray:' num2str(i) ', numCondition:' num2str(j)]);
@@ -550,6 +553,7 @@ else
         fftData{i} = fftDataTMP;
         alphaData{i} = alphaDataTMP;
         ssvepData{i} = ssvepDataTMP;
+        ampCorrData{i} = ampCorrTMP;
         rSCData{i} = rSCTMP;
         
         ffcData{i} = ffcTMP;
@@ -567,6 +571,7 @@ else
     fftData{combinedDataPos} = combineDataAcrossBothArrays(fftData);
     alphaData{combinedDataPos} = combineDataAcrossBothArrays(alphaData);
     ssvepData{combinedDataPos} = combineDataAcrossBothArrays(ssvepData);
+    ampCorrData{combinedDataPos} = combineDataAcrossBothArrays(ampCorrData);
     rSCData{combinedDataPos} = combineDataAcrossBothArrays(rSCData);
 
     ffcData{combinedDataPos} = combineDataAcrossBothArrays(ffcData);
@@ -575,18 +580,14 @@ else
     sfPhiData{combinedDataPos} = combineDataAcrossBothArrays(sfPhiData);
     end
     
-    % rSC Analysis Across Hemispheres
-    disp('Working on rSC Data for electrode pairs across hemispheres')
-    for j=1:numConditions
-        for k=1:size(electrodePairsAcrossHemispheres,1)
-            disp(['numCondition:' num2str(j)'  ' ElectrodePair:' num2str(k)])
-            [~,~,rSCData_AH(j,k),~] = getCCG(spikeData{j}.segmentedSpikeData(electrodePairsAcrossHemispheres(k,1),:),spikeData{j}.segmentedSpikeData(electrodePairsAcrossHemispheres(k,2),:),timeRange,1000/Fs);
-        end
-    end
-    
-    % Coherency and Spike-LFP Phase Analysis Across Hemispheres(FFC,SFC,sfPhi)
-    disp('Working on Coherency Data for electrode pairs across hemispheres')
+    % AmpCorr, rSC & Coherency analysis across hemispheres
+    disp('Working on amplitude correlation Data, rSC Data and Coherency Data for electrode pairs across hemispheres')
     for j = 1:numConditions
+        % Amplitude Correlation analysis across Hemispheres
+        ampCorrData_AH(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),electrodePairsAcrossHemispheres);
+        % rSC Analysis Across Hemispheres
+        rSCData_AH(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,electrodePairsAcrossHemispheres,timeRange,1000/Fs);
+        % Coherency and Spike-LFP Phase Analysis Across Hemispheres(FFC,SFC,sfPhi)
         [ffcData_AH(j,:,:),ffPhiData_AH(j,:,:),sfcData_AH(j,:,:),sfPhiData_AH(j,:,:),~] = getCoherencyMeasures(lfpData{j}.segmentedLFPData(:,:,pos),spikeData{j}.segmentedSpikeData,electrodePairsAcrossHemispheres,tapers,lfpData{j}.timeVals(pos),timeRange); %AH -across Hemisheres
     end
     
@@ -598,9 +599,10 @@ else
     sfcData{InterHemisphericCoherencyPos} = sfcData_AH;
     sfPhiData{InterHemisphericCoherencyPos} = sfPhiData_AH;
     rSCData{InterHemisphericCoherencyPos} = rSCData_AH;
+    ampCorrData{InterHemisphericCoherencyPos} = ampCorrData_AH;
     
     % Save data
-    save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
+    save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
     save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT');
 end
 end
@@ -705,12 +707,12 @@ N = size(lfpData,2);
 disp('Working on FFC Data')
 % Field-Field coherence
 for i=1:size(electrodePair,1)
-clear lfp1 lfp2
-disp(['FFC ElectrodePair:',num2str(i)]);
-lfp1 = squeeze(lfpData(electrodePair(i,1),:,:));
-lfp2 = squeeze(lfpData(electrodePair(i,2),:,:));
+    clear lfp1 lfp2
+    disp(['FFC ElectrodePair:',num2str(i)]);
+    lfp1 = squeeze(lfpData(electrodePair(i,1),:,:));
+    lfp2 = squeeze(lfpData(electrodePair(i,2),:,:));
 
-[ffc(i,:),ffPhi(i,:),S12_ffc(i,:),S1_ffc(i,:),S2_ffc(i,:),freqFFC]=coherencyc(lfp1',lfp2',params); %#ok<ASGLU,*AGROW>
+    [ffc(i,:),ffPhi(i,:),S12_ffc(i,:),S1_ffc(i,:),S2_ffc(i,:),freqFFC]=coherencyc(lfp1',lfp2',params); %#ok<ASGLU,*AGROW>
 end
 
 % if params.trialave = 0;
@@ -722,11 +724,11 @@ end
 disp('Working on SFC Data')
 % Spike-Field coherence
 for i=1:size(electrodePair,1)
-clear lfp spk
-disp(['SFC ElectrodePair:',num2str(i)]);
-lfp = squeeze(lfpData(electrodePair(i,1),:,:));
-spk = convertSpikeTimes2Bins(spikeData(electrodePair(i,2),:,:),timeRange,1000/Fs);
-[sfc(i,:),sfPhi(i,:),S12_sfc(i,:),S1_sfc(i,:),S2_sfc(i,:),freqSFC]=coherencycpb(lfp',spk,params); %#ok<ASGLU,*AGROW>
+    clear lfp spk
+    disp(['SFC ElectrodePair:',num2str(i)]);
+    lfp = squeeze(lfpData(electrodePair(i,1),:,:));
+    spk = convertSpikeTimes2Bins(spikeData(electrodePair(i,2),:,:),timeRange,1000/Fs);
+    [sfc(i,:),sfPhi(i,:),S12_sfc(i,:),S1_sfc(i,:),S2_sfc(i,:),freqSFC]=coherencycpb(lfp',spk,params); %#ok<ASGLU,*AGROW>
 end
 
 % Sanity Check
@@ -736,6 +738,66 @@ else
     error('freqVals from fft & multitaper do not match!')
 end
 
+end
+function ampCorr = getAmplitudeCorrelation(lfpData,electrodePair)
+disp('Working on amplitude Correlation Data')
+fftDataTrialWise = log10(abs(fft(lfpData,[],3)));
+for k = 1:size(electrodePair,1)
+    clear fft1 fft2
+    disp(['AmpCorrData,electrodePair:',num2str(k)])
+    disp(['Amplitude Correlation ElectrodePair:',num2str(k)])
+    fft1 = squeeze(fftDataTrialWise(electrodePair(k,1),:,:));
+    fft2 = squeeze(fftDataTrialWise(electrodePair(k,2),:,:));
+    ampCorr(k,:) = diag(corr(fft1,fft2))';
+end
+end
+function rSC = getSpikeCountCorrelation(spikeData,electrodePair,tRangeS,dMS) % Computes for all Electrode pairs
+disp('Working on rSc Data')
+for k=1:size(electrodePair,1)
+    [~,~,rSC,~] = getCCG(spikeData(electrodePair(k,1),:),spikeData(electrodePair(k,2),:),tRangeS,dMS);
+end
+end
+function [ccg,xs,rSC,ccgShift] = getCCG(spike1,spike2,tRangeS,dMS)
+% This program computes the CCG between two spike trains computed using the
+% equation from Kohn and Smith, 2005.
+
+% Inputs
+% spike1, spike2: cell arrays of spike times in seconds. They must be of
+% the same length 
+% tRangeS = [tMinS tMaxS] is the time range (in seconds)
+% dMS: The time resolution at which spikes are binned (default: 1 ms)
+if ~exist('dMS','var');                    dMS=1;                        end
+
+% Convert spike times to binned analog data of zeros and ones
+analogSpikeTrain1 = convertSpikeTimes2Bins(spike1,tRangeS,dMS);
+analogSpikeTrain2 = convertSpikeTimes2Bins(spike2,tRangeS,dMS);
+
+for i=1:size(analogSpikeTrain1,2)
+    R12(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i),'unbiased')/(dMS/1000); %#ok<*AGROW>
+end
+
+% Shift predictor
+for i=1:size(analogSpikeTrain1,2)-1
+    R12Shift(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i+1),'unbiased')/(dMS/1000);
+end
+
+h1 = getSpikeCounts(spike1,tRangeS);
+h2 = getSpikeCounts(spike2,tRangeS);
+
+% mean fr
+dT = diff(tRangeS);
+meanFR1 = mean(h1)/dT;
+meanFR2 = mean(h2)/dT;
+
+% CCG
+ccg = mean(R12)/sqrt(meanFR1*meanFR2);
+ccgShift = mean(R12Shift)/sqrt(meanFR1*meanFR2);
+
+dS=dMS/1000;
+xs = -dT+dS:dS:dT-dS;
+
+% rSC
+rSC = (mean(h1.*h2) - mean(h1)*mean(h2))/(std(h1)*std(h2));
 end
 function combinedData = combineDataAcrossBothArrays(data)
 if numel(size(data{1}))==2
