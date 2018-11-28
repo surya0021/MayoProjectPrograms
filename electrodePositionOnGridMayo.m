@@ -1,6 +1,9 @@
 function [row,column,electrodeArray] = electrodePositionOnGridMayo(electrodeNum,SessionIDString)
 
-if  strcmp(SessionIDString(2),'w') || strcmp(SessionIDString(1:6),'wiggin')
+if  strcmp(SessionIDString,'blank') 
+electrodeArray = zeros(8,13);
+
+elseif  strcmp(SessionIDString(2),'w') || strcmp(SessionIDString(1:6),'wiggin')
 electrodeArray = ...
    [46    50    15    17     9     6   0  75    73    71    69    67    65
     11     8    90    89    55    56   0  72    70    68    66    79    77

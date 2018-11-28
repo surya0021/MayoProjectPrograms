@@ -1,19 +1,21 @@
 function displayResultsMayo(folderSourceString)
 
 if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
+close all;
+
+% Figure 1
+set(matlab.ui.Figure,'units','normalized','outerposition',[0 0 1 1]) % Figure 1
 
 % Display Options
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16; % Fonts
 panelHeight = 0.2; panelStartHeight = 0.8; backgroundColor = 'w'; % Panels
 
-% Figure
-close all;
-set(matlab.ui.Figure,'units','normalized','outerposition',[0 0 1 1])
+
 
 % Electrode Grid will now be shown according to session chosen
 % Show electrodes 
-% electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
-% hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0);
+electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
+hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hParameterPanel = uipanel('Title','Parameters','fontSize', fontSizeLarge, ...
@@ -212,20 +214,35 @@ uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
 
 % Plots
 
-hPSTH = getPlotHandles(3,1,[0.16 0.05 0.1 0.7],0,0.05,0); linkaxes(hPSTH);
-hERP = getPlotHandles(3,1,[0.28 0.05 0.1 0.7],0,0.05,0); linkaxes(hERP);
-hFFT = getPlotHandles(3,1,[0.4 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFT);
-hFFC = getPlotHandles(3,1,[0.52 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFC);
-hSFC = getPlotHandles(3,1,[0.64 0.05 0.1 0.7],0,0.05,0); linkaxes(hSFC);
+% Figure 1
+figure(1)
+hBehavior(1) = subplot('Position',[0.05 0.3 0.2 0.45]);
+hBehavior(2) = subplot('Position',[0.05 0.05 0.2 0.2]); linkaxes(hBehavior);
 
+hPSTH = getPlotHandles(3,1,[0.3 0.05 0.1 0.7],0,0.05,0); linkaxes(hPSTH);
+hERP = getPlotHandles(3,1,[0.45 0.05 0.1 0.7],0,0.05,0); linkaxes(hERP);
+hFFT = getPlotHandles(3,1,[0.6 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFT);
 
-hBarFR = getPlotHandles(3,1,[0.76 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarFR);
-hBarRsc = getPlotHandles(3,1,[0.82 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarRsc);
-hBarAlpha = getPlotHandles(3,1,[0.88 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarAlpha);
-hBarSSVEP = getPlotHandles(3,1,[0.94 0.05 0.04 0.7],0,0.05,0); linkaxes(hBarSSVEP);
+hBarFR = getPlotHandles(3,1,[0.75 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarFR);
+hBarAlpha = getPlotHandles(3,1,[0.82 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarAlpha);
+hBarSSVEP = getPlotHandles(3,1,[0.9 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarSSVEP);
 
-hBehavior(1) = subplot('Position',[0.03 0.3 0.1 0.45]);
-hBehavior(2) = subplot('Position',[0.03 0.05 0.1 0.2]); linkaxes(hBehavior);
+% Figure 2 (electrode pairwise analysis results)
+set(matlab.ui.Figure,'units','normalized','outerposition',[0 0 1 1]) %Figure 2
+hFFC = getPlotHandles(4,1,[0.04 0.05 0.1 0.9],0,0.02,0); linkaxes(hFFC);
+hSFC = getPlotHandles(4,1,[0.16 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFC);
+hSFPhiAlpha = getPlotHandles(4,1,[0.28 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiAlpha);
+hSFPhiSSVEP = getPlotHandles(4,1,[0.4 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiSSVEP);
+hAmpCorr = getPlotHandles(4,1,[0.52 0.05 0.1 0.9],0,0.02,0); linkaxes(hAmpCorr);
+
+hBarRsc = getPlotHandles(4,1,[0.64 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarRsc);
+hBarFFCAlpha = getPlotHandles(4,1,[0.69 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCAlpha);
+hBarFFCSSVEP = getPlotHandles(4,1,[0.74 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCSSVEP);
+hBarSFCAlpha = getPlotHandles(4,1,[0.79 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarSFCAlpha);
+hBarSFCSSVEP = getPlotHandles(4,1,[0.84 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarSFCSSVEP);
+hBarAmpCorrAlpha = getPlotHandles(4,1,[0.89 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrAlpha);
+hBarAmpCorrSSVEP = getPlotHandles(4,1,[0.94 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrSSVEP);
+
 
 colorNamesSides = 'cm';
 
@@ -242,9 +259,13 @@ colorNamesSides = 'cm';
         colorNamesAttCue = colorNames{get(hChooseColor,'val')};
         
         % Show electrodes
-%         if length(fileNameStringTMP)<=12
+        if strcmp(SessionIDString{1},'all (N=24)')
+        hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
+        else
         electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
         hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,SessionIDString{1});
+        end
+        
 %         else
 %         electrodeGridPos1 = [0.05 panelStartHeight+panelHeight/2 0.2 panelHeight/2]; 
 %         hElectrodes1 = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,fileNameStringTMP);
@@ -269,10 +290,16 @@ colorNamesSides = 'cm';
             hold(hBehavior(1),'on');
         end
 
-        for arraySide=1:2
+        for arraySide=1:3
+            if s==27||arraySide ==3
+            else
             showElectrodeLocationsMayo([],electrodeArray{arraySide},colorNamesSides(arraySide),hElectrodes,1,0,SessionIDString{1}); % Show electrodes used for analysis
-              
+            end
             for attCuePos=1:5
+                if attCuePos==3 || attCuePos==4
+                    continue
+                end
+                
                 plot(hPSTH(arraySide),xsFR,squeeze(mean(psthData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hPSTH(arraySide),'on');
                 
@@ -281,10 +308,29 @@ colorNamesSides = 'cm';
                 
                 plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hFFT(arraySide),'on');
+                
+%                 figure(2)
+
+                
+                
             end
             makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue);
+            makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue);
             makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue);
             makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue);
+        end
+        
+        for arraySide=1:4
+            for attCuePos=1:5
+                if attCuePos==3 || attCuePos==4
+                    continue
+                end
+                
+                plot(hFFC(arraySide),freqValsMT,squeeze(mean(ffcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
+                hold (hFFC(arraySide),'on');
+                plot(hSFC(arraySide),freqValsMT,squeeze(mean(sfcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
+                hold (hSFC(arraySide),'on');                
+            end
         end
         
         % Rescale plots and set the x and y scales
@@ -301,6 +347,10 @@ colorNamesSides = 'cm';
         axis(hFFT(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
         set(hFFTYMin,'String',num2str(yLims(1))); set(hFFTYMax,'String',num2str(yLims(2)));
         
+        yLims = getYLims(hFFC);
+        axis(hFFC(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
+        set(hFFTYMin,'String',num2str(yLims(1))); set(hFFTYMax,'String',num2str(yLims(2)));
+        
         yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 0 yLims(2)]);
         yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 6 yLims]);
         yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 6 yLims]);
@@ -310,13 +360,29 @@ colorNamesSides = 'cm';
         xlabel(hPSTH(3),'Time (s)'); title(hPSTH(1),'Firing Rate (spikes/s)');
         xlabel(hERP(3),'Time (s)'); title(hERP(1),'ERP (\muV)');
         xlabel(hFFT(3),'Frequency (Hz)'); title(hFFT(1),'Log FFT');
-        xlabel(hFFC(3),'Frequency (Hz)'); title(hFFC(1),'FFC');
-        xlabel(hSFC(3),'Frequency (Hz)'); title(hSFC(1),'SFC');
         
         title(hBarFR(1),'Firing Rate');
-        title(hBarRsc(1),'r_s_c');
+%         title(hBarRsc(1),'r_s_c');
         title(hBarAlpha(1),'Alpha');
         title(hBarSSVEP(1),'SSVEP');
+        
+        
+        xlabel(hFFC(4),'Frequency (Hz)'); title(hFFC(1),'FFC');
+        xlabel(hSFC(4),'Frequency (Hz)'); title(hSFC(1),'SFC');
+        
+        xlabel(hAmpCorr(4),'Frequency (Hz)'); title(hAmpCorr(1),'Amp Corr');
+        
+        title(hBarRsc(1),'r_s_c');
+        title(hBarFFCAlpha(1),'FFC-Alpha');
+        title(hBarFFCSSVEP(1),'FFC-SSVEP');
+        title(hBarSFCAlpha(1),'SFC-Alpha');
+        title(hBarSFCSSVEP(1),'SFC-SSVEP');
+        title(hBarAmpCorrAlpha(1),'amp-alpha');
+        title(hBarAmpCorrSSVEP(1),'amp-SSVEP');
+        
+        
+        
+
         
         title(hBehavior(1),'Behavior (Fraction Correct)');
         
@@ -340,7 +406,10 @@ colorNamesSides = 'cm';
         holdOnGivenPlotHandle(hPSTH,holdOnState);
         holdOnGivenPlotHandle(hERP,holdOnState);
         holdOnGivenPlotHandle(hFFT,holdOnState);
+        holdOnGivenPlotHandle(hFFC,holdOnState);
+        holdOnGivenPlotHandle(hSFC,holdOnState);
         holdOnGivenPlotHandle(hBarFR,holdOnState);
+        holdOnGivenPlotHandle(hBarRsc,holdOnState);
         holdOnGivenPlotHandle(hBarAlpha,holdOnState);
         holdOnGivenPlotHandle(hBarSSVEP,holdOnState);
         holdOnGivenPlotHandle(hBehavior,holdOnState);
@@ -375,10 +444,14 @@ colorNamesSides = 'cm';
         claGivenPlotHandle(hPSTH);
         claGivenPlotHandle(hERP);
         claGivenPlotHandle(hFFT);
+        claGivenPlotHandle(hFFC);
+        claGivenPlotHandle(hSFC);
         claGivenPlotHandle(hBarFR);
+        claGivenPlotHandle(hBarRsc);
         claGivenPlotHandle(hBarAlpha);
         claGivenPlotHandle(hBarSSVEP);
         claGivenPlotHandle(hBehavior);
+        claGivenPlotHandle(hElectrodes);
         
         function claGivenPlotHandle(plotHandles)
             [numRows,numCols] = size(plotHandles);
@@ -754,7 +827,7 @@ end
 function rSC = getSpikeCountCorrelation(spikeData,electrodePair,tRangeS,dMS) % Computes for all Electrode pairs
 disp('Working on rSc Data')
 for k=1:size(electrodePair,1)
-    [~,~,rSC,~] = getCCG(spikeData(electrodePair(k,1),:),spikeData(electrodePair(k,2),:),tRangeS,dMS);
+    [~,~,rSC(k),~] = getCCG(spikeData(electrodePair(k,1),:),spikeData(electrodePair(k,2),:),tRangeS,dMS);
 end
 end
 function [ccg,xs,rSC,ccgShift] = getCCG(spike1,spike2,tRangeS,dMS)
