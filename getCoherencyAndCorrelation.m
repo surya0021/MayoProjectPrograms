@@ -1,4 +1,4 @@
-function [FFC,SFC,PCFF,AmpCorr,alphaCorr,ssvepCorr,Rsc]=getCoherencyAndCorrelation(lfpData,spikeData,electrodePairs,timeRange,alphaPos,ssvepPos)
+function [FFC,SFC,PCFF,AmpCorr,alphaCorr,ssvepCorr,alphaFFC,alphaSFC,alphaPC,ssvepFFC,ssvepSFC,ssvepPC,Rsc]=getCoherencyAndCorrelation(lfpData,spikeData,electrodePairs,timeRange,alphaPos,ssvepPos)
 
  timeVals=lfpData{1}.timeVals;
  Fs = round(1/(timeVals(2)-timeVals(1)));
@@ -12,9 +12,10 @@ params.pad      = -1;
 params.Fs       = 2000;
 params.fpass    = [0 200];
 params.trialave = 0; 
-FFC=cell(1,4); SFC=cell(1,4); PCFF=cell(1,4); AmpCorr=cell(1,4); Rsc=cell(1,4); 
+FFC=cell(1,4); SFC=cell(1,4); PCFF=cell(1,4); AmpCorr=cell(1,4); alphaCorr=cell(1,4); alphaFFC=cell(1,4); alphaSFC=cell(1,4); alphaPC=cell(1,4); ssvepCorr=cell(1,4); ssvepFFC=cell(1,4);
+ssvepSFC=cell(1,4); ssvepPC=cell(1,4); Rsc=cell(1,4); 
  for array=1:3
-    clear FFCTmp SFCTmp PCFFTmp AmpCorrTmp alphaCorrTmp ssvepCorrTmp RscTmp
+    clear FFCTmp SFCTmp PCFFTmp AmpCorrTmp alphaCorrTmp ssvepCorrTmp alphaFFCTmp alphaSFCTmp alphaPCTmp ssvepFFCTmp ssvepSFCTmp ssvepPCTmp RscTmp
     for i=1:5
         fftAmp=abs(fft(lfpData{i}.segmentedLFPData(:,:,pos),[],3));
         for j=1:size(electrodePairs{array},1)
@@ -41,7 +42,12 @@ FFC=cell(1,4); SFC=cell(1,4); PCFF=cell(1,4); AmpCorr=cell(1,4); Rsc=cell(1,4);
             AmpCorrTmp(i,j,:)=diag(corr(amp1,amp2));
             alphaCorrTmp(i,j)=mean(AmpCorrTmp(i,j,alphaPos),3);
             ssvepCorrTmp(i,j)=AmpCorrTmp(i,j,ssvepPos);
-           
+            alphaFFCTmp(i,j)=mean(FFCTmp(i,j,alphaPos),3);
+            alphaSFCTmp(i,j)=mean(SFCTmp(i,j,alphaPos),3);
+            alphaPCTmp(i,j)=mean(PCFFTmp(i,j,alphaPos),3);
+            ssvepFFCTmp(i,j)=FFCTmp(i,j,ssvepPos);
+            ssvepSFCTmp(i,j)=SFCTmp(i,j,ssvepPos);
+            ssvepPCTmp(i,j)=PCFFTmp(i,j,ssvepPos);
         end
     end
     if array==3
@@ -51,9 +57,19 @@ FFC=cell(1,4); SFC=cell(1,4); PCFF=cell(1,4); AmpCorr=cell(1,4); Rsc=cell(1,4);
     SFC{array}=SFCTmp;
     PCFF{array}=PCFFTmp;
     AmpCorr{array}=AmpCorrTmp;
-    alphaCorr{array}=alphaCorrTmp;
-    ssvepCorr{array}=ssvepCorrTmp;
     Rsc{array}=RscTmp;
+    
+    alphaCorr{array}=alphaCorrTmp;
+    alphaFFC{array}=alphaFFCTmp;
+    alphaSFC{array}=alphaSFCTmp;
+    alphaPC{array}=alphaPCTmp;
+    
+    ssvepCorr{array}=ssvepCorrTmp;
+    ssvepFFC{array}=ssvepFFCTmp;
+    ssvepSFC{array}=ssvepSFCTmp;
+    ssvepPC{array}=ssvepPCTmp;
+    
+   
   end    
 end
 
