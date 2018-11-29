@@ -231,9 +231,10 @@ hBarSSVEP = getPlotHandles(3,1,[0.9 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarSSVEP
 set(matlab.ui.Figure,'units','normalized','outerposition',[0 0 1 1]) %Figure 2
 hFFC = getPlotHandles(4,1,[0.04 0.05 0.1 0.9],0,0.02,0); linkaxes(hFFC);
 hSFC = getPlotHandles(4,1,[0.16 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFC);
-hSFPhiAlpha = getPlotHandles(4,1,[0.28 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiAlpha);
-hSFPhiSSVEP = getPlotHandles(4,1,[0.4 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiSSVEP);
-hAmpCorr = getPlotHandles(4,1,[0.52 0.05 0.1 0.9],0,0.02,0); linkaxes(hAmpCorr);
+hAmpCorr = getPlotHandles(4,1,[0.28 0.05 0.1 0.9],0,0.02,0); linkaxes(hAmpCorr);
+hSFPhiAlpha = getPlotHandles(4,1,[0.4 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiAlpha);
+hSFPhiSSVEP = getPlotHandles(4,1,[0.52 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiSSVEP);
+
 
 hBarRsc = getPlotHandles(4,1,[0.64 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarRsc);
 hBarFFCAlpha = getPlotHandles(4,1,[0.69 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCAlpha);
@@ -244,7 +245,7 @@ hBarAmpCorrAlpha = getPlotHandles(4,1,[0.89 0.05 0.04 0.9],0,0.02,0); linkaxes(h
 hBarAmpCorrSSVEP = getPlotHandles(4,1,[0.94 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrSSVEP);
 
 
-colorNamesSides = 'cm';
+colorNamesSides = 'cmkk';
 
 % Plotting functions
     function plotData_Callback(~,~)
@@ -283,7 +284,7 @@ colorNamesSides = 'cm';
         tapers = [1 1];
         
         % Get data
-        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers);
+        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers); %#ok<ASGLU>
         
         for attCuePos=1:5
             plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o'); axis tight;
@@ -291,7 +292,7 @@ colorNamesSides = 'cm';
         end
 
         for arraySide=1:3
-            if s==27||arraySide ==3
+            if s==27||arraySide==3
             else
             showElectrodeLocationsMayo([],electrodeArray{arraySide},colorNamesSides(arraySide),hElectrodes,1,0,SessionIDString{1}); % Show electrodes used for analysis
             end
@@ -309,29 +310,42 @@ colorNamesSides = 'cm';
                 plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hFFT(arraySide),'on');
                 
-%                 figure(2)
-
-                
+              
                 
             end
             makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue);
-            makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue);
             makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue);
             makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue);
         end
+        
+        alphaRangeHz = [8 12]; ssvepFreqHz = 20;
+        alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
+        ssvepPos = find(freqVals==ssvepFreqHz);
         
         for arraySide=1:4
             for attCuePos=1:5
                 if attCuePos==3 || attCuePos==4
                     continue
                 end
-                
+%                 disp([num2str(arraySide) num2str(attCuePos)])
                 plot(hFFC(arraySide),freqValsMT,squeeze(mean(ffcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold (hFFC(arraySide),'on');
                 plot(hSFC(arraySide),freqValsMT,squeeze(mean(sfcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
-                hold (hSFC(arraySide),'on');                
+                hold (hSFC(arraySide),'on');
+                plot(hAmpCorr(arraySide),freqVals,squeeze(mean(ampCorrData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
+                hold (hAmpCorr(arraySide),'on');
+                
             end
+            makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue);
+            makeBarPlot(hBarFFCAlpha(arraySide),mean(ffcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
+            makeBarPlot(hBarFFCSSVEP(arraySide),ffcData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
+            makeBarPlot(hBarSFCAlpha(arraySide),mean(sfcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
+            makeBarPlot(hBarSFCSSVEP(arraySide),sfcData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
+            makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
+            makeBarPlot(hBarAmpCorrSSVEP(arraySide),ampCorrData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
+
         end
+        
         
         % Rescale plots and set the x and y scales
         yLims = getYLims(hPSTH);
@@ -349,12 +363,30 @@ colorNamesSides = 'cm';
         
         yLims = getYLims(hFFC);
         axis(hFFC(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
-        set(hFFTYMin,'String',num2str(yLims(1))); set(hFFTYMax,'String',num2str(yLims(2)));
+        set(hFFC(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        
+        yLims = getYLims(hSFC);
+        axis(hSFC(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
+        set(hSFC(1),'YLim',[0 0.5]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        
+        yLims = getYLims(hAmpCorr);
+        axis(hAmpCorr(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
+        set(hAmpCorr(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        
+        
         
         yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 0 yLims(2)]);
         yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 6 yLims]);
         yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 6 yLims]);
         ylim(hBehavior(1),[0 1]);
+        
+        yLims = [0 0.5];axis(hBarRsc(1)),axis(hBarRsc(1),[0 6 yLims]);
+        yLims = [0 1];axis(hBarFFCAlpha(1)),axis(hBarFFCAlpha(1),[0 6 yLims]);
+        yLims = [0 1];axis(hBarFFCSSVEP(1)),axis(hBarFFCSSVEP(1),[0 6 yLims]);
+        yLims = [0 1];axis(hBarSFCAlpha(1)),axis(hBarSFCAlpha(1),[0 6 yLims]);
+        yLims = [0 1];axis(hBarSFCSSVEP(1)),axis(hBarSFCSSVEP(1),[0 6 yLims]);
+        yLims = [0 1];axis(hBarAmpCorrAlpha(1)),axis(hBarAmpCorrAlpha(1),[0 6 yLims]);
+        yLims = [0 1];axis(hBarAmpCorrSSVEP(1)),axis(hBarAmpCorrSSVEP(1),[0 6 yLims]);
         
         % Labels
         xlabel(hPSTH(3),'Time (s)'); title(hPSTH(1),'Firing Rate (spikes/s)');
@@ -362,7 +394,6 @@ colorNamesSides = 'cm';
         xlabel(hFFT(3),'Frequency (Hz)'); title(hFFT(1),'Log FFT');
         
         title(hBarFR(1),'Firing Rate');
-%         title(hBarRsc(1),'r_s_c');
         title(hBarAlpha(1),'Alpha');
         title(hBarSSVEP(1),'SSVEP');
         
@@ -373,12 +404,12 @@ colorNamesSides = 'cm';
         xlabel(hAmpCorr(4),'Frequency (Hz)'); title(hAmpCorr(1),'Amp Corr');
         
         title(hBarRsc(1),'r_s_c');
-        title(hBarFFCAlpha(1),'FFC-Alpha');
-        title(hBarFFCSSVEP(1),'FFC-SSVEP');
-        title(hBarSFCAlpha(1),'SFC-Alpha');
-        title(hBarSFCSSVEP(1),'SFC-SSVEP');
-        title(hBarAmpCorrAlpha(1),'amp-alpha');
-        title(hBarAmpCorrSSVEP(1),'amp-SSVEP');
+        title(hBarFFCAlpha(1),'FFC_A_l_p_h_a');
+        title(hBarFFCSSVEP(1),'FFC_S_S_V_E_P');
+        title(hBarSFCAlpha(1),'SFC_A_l_p_h_a');
+        title(hBarSFCSSVEP(1),'SFC_S_S_V_E_P');
+        title(hBarAmpCorrAlpha(1),'amp_A_l_p_h_a');
+        title(hBarAmpCorrSSVEP(1),'amp_S_S_V_E_P');
         
         
         
@@ -386,8 +417,12 @@ colorNamesSides = 'cm';
         
         title(hBehavior(1),'Behavior (Fraction Correct)');
         
-        for arraySide=1:2
-            ylabel(hPSTH(arraySide),['N=' num2str(length(electrodeArray{arraySide}))],'color',colorNamesSides(arraySide));
+        for arraySide=1:3
+            ylabel(hPSTH(arraySide),['N=' num2str(size(psthData{arraySide},2))],'color',colorNamesSides(arraySide));
+        end
+        
+        for arraySide = 1:4
+            ylabel(hFFC(arraySide),['N=' num2str(size(ffcData{arraySide},2))],'color',colorNamesSides(arraySide));
         end
         
         legend(hBehavior(1),'0V','1V','0I','1I','N','location','southeast');
@@ -406,13 +441,23 @@ colorNamesSides = 'cm';
         holdOnGivenPlotHandle(hPSTH,holdOnState);
         holdOnGivenPlotHandle(hERP,holdOnState);
         holdOnGivenPlotHandle(hFFT,holdOnState);
-        holdOnGivenPlotHandle(hFFC,holdOnState);
-        holdOnGivenPlotHandle(hSFC,holdOnState);
         holdOnGivenPlotHandle(hBarFR,holdOnState);
-        holdOnGivenPlotHandle(hBarRsc,holdOnState);
         holdOnGivenPlotHandle(hBarAlpha,holdOnState);
         holdOnGivenPlotHandle(hBarSSVEP,holdOnState);
         holdOnGivenPlotHandle(hBehavior,holdOnState);
+        
+        holdOnGivenPlotHandle(hFFC,holdOnState);
+        holdOnGivenPlotHandle(hSFC,holdOnState);
+        holdOnGivenPlotHandle(hSFPhiAlpha,holdOnState);
+        holdOnGivenPlotHandle(hSFPhiSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hAmpCorr,holdOnState);
+        holdOnGivenPlotHandle(hBarRsc,holdOnState);
+        holdOnGivenPlotHandle(hBarFFCAlpha,holdOnState);
+        holdOnGivenPlotHandle(hBarFFCSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBarSFCAlpha,holdOnState);
+        holdOnGivenPlotHandle(hBarSFCSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBarAmpCorrAlpha,holdOnState);
+        holdOnGivenPlotHandle(hBarAmpCorrSSVEP,holdOnState);
         
         if holdOnState
             set(hElectrodes,'Nextplot','add');
@@ -444,13 +489,25 @@ colorNamesSides = 'cm';
         claGivenPlotHandle(hPSTH);
         claGivenPlotHandle(hERP);
         claGivenPlotHandle(hFFT);
-        claGivenPlotHandle(hFFC);
-        claGivenPlotHandle(hSFC);
         claGivenPlotHandle(hBarFR);
-        claGivenPlotHandle(hBarRsc);
         claGivenPlotHandle(hBarAlpha);
         claGivenPlotHandle(hBarSSVEP);
-        claGivenPlotHandle(hBehavior);
+        claGivenPlotHandle(hBehavior);        
+        
+        
+        claGivenPlotHandle(hFFC);
+        claGivenPlotHandle(hSFC);
+        claGivenPlotHandle(hSFPhiAlpha);
+        claGivenPlotHandle(hSFPhiSSVEP);
+        claGivenPlotHandle(hAmpCorr);
+        claGivenPlotHandle(hBarRsc);
+        claGivenPlotHandle(hBarFFCAlpha);
+        claGivenPlotHandle(hBarFFCSSVEP);
+        claGivenPlotHandle(hBarSFCAlpha);
+        claGivenPlotHandle(hBarSFCSSVEP);
+        claGivenPlotHandle(hBarAmpCorrAlpha);
+        claGivenPlotHandle(hBarAmpCorrSSVEP);
+        
         claGivenPlotHandle(hElectrodes);
         
         function claGivenPlotHandle(plotHandles)
@@ -919,6 +976,9 @@ mData = mean(data,2);
 semData = std(data,[],2)/sqrt(N);
 
 for i=1:size(data,1)
+    if i==3 || i==4
+        continue
+    end
     plot(h,i,mData(i),'color',colorNames(i,:),'marker','o');
     hold(h,'on');
     errorbar(h,i,mData(i),semData(i),'color',colorNames(i,:));
