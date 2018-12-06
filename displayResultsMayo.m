@@ -88,7 +88,7 @@ hTimingPanel = uipanel('Title','X and Y Limits','fontSize', fontSizeLarge, ...
     'Unit','Normalized','Position',[0.5 panelStartHeight 0.25 panelHeight]);
 timingHeight = 1/6;
 
-signalRange = [-0.25 0.5]; fftRange = [0 50];
+signalRange = [-0.25 0.5]; fftRange = [0 100];
 
 % Signal Range
 uicontrol('Parent',hTimingPanel,'Unit','Normalized', ...
@@ -188,23 +188,27 @@ hChooseColor = uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
     'Position',[0.6 5*plotOptionsHeight 0.4 plotOptionsHeight], ...
     'Style','popup','String',colorString,'FontSize',fontSizeSmall);
 
+hShowAbsoluteVals = uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
+    'Position',[0 2*plotOptionsHeight 1 plotOptionsHeight], ...
+    'Style','togglebutton','String','Show Absolute Measures','FontSize',fontSizeMedium);
+
 uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
-    'Position',[0 3*plotOptionsHeight 1 plotOptionsHeight], ...
+    'Position',[0 1*plotOptionsHeight 0.5 plotOptionsHeight], ...
     'Style','pushbutton','String','cla','FontSize',fontSizeMedium, ...
     'Callback',{@cla_Callback});
 
 hHoldOn = uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
-    'Position',[0 2*plotOptionsHeight 1 plotOptionsHeight], ...
+    'Position',[0.5 1*plotOptionsHeight 0.5 plotOptionsHeight], ...
     'Style','togglebutton','String','hold on','FontSize',fontSizeMedium, ...
     'Callback',{@holdOn_Callback});
 
 uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
-    'Position',[0 plotOptionsHeight 1 plotOptionsHeight], ...
+    'Position',[0 0 0.5 plotOptionsHeight], ...
     'Style','pushbutton','String','Rescale','FontSize',fontSizeMedium, ...
     'Callback',{@rescaleXY_Callback});
 
 uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
-    'Position',[0 0 1 plotOptionsHeight], ...
+    'Position',[0.5 0 0.5 plotOptionsHeight], ...
     'Style','pushbutton','String','plot','FontSize',fontSizeMedium, ...
     'Callback',{@plotData_Callback});
 
@@ -253,6 +257,7 @@ colorNamesSides = 'cmkk';
         tp=get(hTimePeriodType,'val'); tpStr = analysisIntervalString{tp};
         
         colorNamesAttCue = colorNames{get(hChooseColor,'val')};
+        showAbsoluteValsFlag = get(hShowAbsoluteVals,'val');
         
         % Show electrodes
         if strcmp(SessionIDString{1},'all (N=24)')
@@ -295,13 +300,18 @@ colorNamesSides = 'cmkk';
                 plot(hERP(arraySide),timeVals,squeeze(mean(erpData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hERP(arraySide),'on');
                 
-                plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
-                hold(hFFT(arraySide),'on');
+                clear dataFFT
+                if showAbsoluteValsFlag
+                    dataFFT = squeeze(fftData{arraySide}(attCuePos,:,:));
+                else
+                    dataFFT = squeeze(fftData{arraySide}(attCuePos,:,:)) - squeeze(fftData{arraySide}(5,:,:));
+                end
+                plotData(hFFT(arraySide),freqVals,dataFFT,colorNamesAttCue(attCuePos,:));
             end
             
-            makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue);
-            makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue);
-            makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue);
+            makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
         end
         
         alphaRangeHz = [8 12]; ssvepFreqHz = 20;
@@ -313,22 +323,28 @@ colorNamesSides = 'cmkk';
                 if attCuePos==3 || attCuePos==4
                     continue
                 end
-                %                 disp([num2str(arraySide) num2str(attCuePos)])
-                plot(hFFC(arraySide),freqValsMT,squeeze(mean(ffcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
-                hold (hFFC(arraySide),'on');
-                plot(hSFC(arraySide),freqValsMT,squeeze(mean(sfcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
-                hold (hSFC(arraySide),'on');
-                plot(hAmpCorr(arraySide),freqVals,squeeze(mean(ampCorrData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
-                hold (hAmpCorr(arraySide),'on');
+                clear dataFFC dataSFC dataAmpCorr
+                if showAbsoluteValsFlag
+                    dataFFC = squeeze(ffcData{arraySide}(attCuePos,:,:));
+                    dataSFC = squeeze(sfcData{arraySide}(attCuePos,:,:));
+                    dataAmpCorr = squeeze(ampCorrData{arraySide}(attCuePos,:,:));
+                else
+                    dataFFC = squeeze(ffcData{arraySide}(attCuePos,:,:)) - squeeze(ffcData{arraySide}(5,:,:));
+                    dataSFC = squeeze(sfcData{arraySide}(attCuePos,:,:)) - squeeze(sfcData{arraySide}(5,:,:));
+                    dataAmpCorr = squeeze(ampCorrData{arraySide}(attCuePos,:,:)) - squeeze(ampCorrData{arraySide}(5,:,:));
+                end
+                plotData(hFFC(arraySide),freqValsMT,dataFFC,colorNamesAttCue(attCuePos,:));
+                plotData(hSFC(arraySide),freqValsMT,dataSFC,colorNamesAttCue(attCuePos,:));
+                plotData(hAmpCorr(arraySide),freqVals,dataAmpCorr,colorNamesAttCue(attCuePos,:));
             end
             
-            makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue);
-            makeBarPlot(hBarFFCAlpha(arraySide),mean(ffcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
-            makeBarPlot(hBarFFCSSVEP(arraySide),ffcData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
-            makeBarPlot(hBarSFCAlpha(arraySide),mean(sfcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
-            makeBarPlot(hBarSFCSSVEP(arraySide),sfcData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
-            makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
-            makeBarPlot(hBarAmpCorrSSVEP(arraySide),ampCorrData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
+            makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarFFCAlpha(arraySide),mean(ffcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarFFCSSVEP(arraySide),ffcData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarSFCAlpha(arraySide),mean(sfcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarSFCSSVEP(arraySide),sfcData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarAmpCorrSSVEP(arraySide),ampCorrData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag);
         end
         
         % Rescale plots and set the x and y scales
@@ -347,22 +363,26 @@ colorNamesSides = 'cmkk';
         
         yLims = getYLims(hFFC);
         axis(hFFC(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
-        set(hFFC(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        if showAbsoluteValsFlag;    set(hFFC(1),'YLim',[0 1]);          end
         
         yLims = getYLims(hSFC);
         axis(hSFC(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
-        set(hSFC(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        if showAbsoluteValsFlag;    set(hSFC(1),'YLim',[0 1]);          end
         
         yLims = getYLims(hAmpCorr);
         axis(hAmpCorr(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
-        set(hAmpCorr(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        if showAbsoluteValsFlag;    set(hAmpCorr(1),'YLim',[0 1]);      end
 
         yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 yLims]);
         yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 6 yLims]);
         yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 6 yLims]);
         ylim(hBehavior(1),[0 1]);
         
-        yLims = [0 1]; 
+        if showAbsoluteValsFlag
+            yLims = [0 1];
+        else
+            yLims = [-0.05 0.05];
+        end
         axis(hBarRsc(1),[0 6 yLims]);
         axis(hBarFFCAlpha(1),[0 6 yLims]);
         axis(hBarFFCSSVEP(1),[0 6 yLims]);
@@ -870,48 +890,6 @@ for k=1:size(electrodePair,1)
     rSC(k) = (mean(h1.*h2) - mean(h1)*mean(h2))/(std(h1)*std(h2));
 end
 end
-% function [ccg,xs,rSC,ccgShift] = getCCG(spike1,spike2,tRangeS,dMS)
-% % This program computes the CCG between two spike trains computed using the
-% % equation from Kohn and Smith, 2005.
-% 
-% % Inputs
-% % spike1, spike2: cell arrays of spike times in seconds. They must be of
-% % the same length
-% % tRangeS = [tMinS tMaxS] is the time range (in seconds)
-% % dMS: The time resolution at which spikes are binned (default: 1 ms)
-% if ~exist('dMS','var');                    dMS=1;                        end
-% 
-% % Convert spike times to binned analog data of zeros and ones
-% analogSpikeTrain1 = convertSpikeTimes2Bins(spike1,tRangeS,dMS);
-% analogSpikeTrain2 = convertSpikeTimes2Bins(spike2,tRangeS,dMS);
-% 
-% for i=1:size(analogSpikeTrain1,2)
-%     R12(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i),'unbiased')/(dMS/1000); %#ok<*AGROW>
-% end
-% 
-% % Shift predictor
-% for i=1:size(analogSpikeTrain1,2)-1
-%     R12Shift(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i+1),'unbiased')/(dMS/1000);
-% end
-% 
-% h1 = getSpikeCounts(spike1,tRangeS);
-% h2 = getSpikeCounts(spike2,tRangeS);
-% 
-% % mean fr
-% dT = diff(tRangeS);
-% meanFR1 = mean(h1)/dT;
-% meanFR2 = mean(h2)/dT;
-% 
-% % CCG
-% ccg = mean(R12)/sqrt(meanFR1*meanFR2);
-% ccgShift = mean(R12Shift)/sqrt(meanFR1*meanFR2);
-% 
-% dS=dMS/1000;
-% xs = -dT+dS:dS:dT-dS;
-% 
-% % rSC
-% rSC = (mean(h1.*h2) - mean(h1)*mean(h2))/(std(h1)*std(h2));
-% end
 function combinedData = combineDataAcrossBothArrays(data)
 if numel(size(data{1}))==2
     Data{1} = cat(2,data{1}(1,:),data{2}(2,:)); % Attend In - Valid [(R)H0V & (L)H1V]
@@ -952,9 +930,13 @@ end
 
 yLims=[yMin yMax];
 end
-function makeBarPlot(h,data,colorNames)
+function makeBarPlot(h,data,colorNames,showAbsoluteValsFlag)
 
 N = size(data,2);
+if ~showAbsoluteValsFlag
+    data = data - repmat(data(5,:),5,1);
+end
+
 mData = mean(data,2);
 semData = std(data,[],2)/sqrt(N);
 
@@ -967,6 +949,26 @@ for i=1:size(data,1)
     errorbar(h,i,mData(i),semData(i),'color',colorNames(i,:));
 end
 set(h,'XTick',[],'XTicklabel',[]);
+end
+function plotData(hPlot,xs,data,colorName)
+
+if isequal(colorName,[0 0 1])
+    colorName2 = [0 1 1];
+elseif isequal(colorName,[1 0 0])
+    colorName2 = [1 0 1];
+else
+    colorName2 = colorName;
+end
+
+mData = mean(data,1);
+sData = std(data,[],1)/sqrt(size(data,1));
+xsLong = [xs fliplr(xs)];
+ysLong = [mData+sData fliplr(mData-sData)];
+
+patch(xsLong,ysLong,colorName2,'parent',hPlot);
+hold(hPlot,'on');
+plot(hPlot,xs,mData,'color',colorName,'linewidth',2); 
+
 end
 function sortRating=sortRating(fileNameString,folderSourceString)
 
