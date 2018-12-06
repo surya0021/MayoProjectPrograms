@@ -10,10 +10,8 @@ set(matlab.ui.Figure,'units','normalized','outerposition',[0 0 1 1]) % Figure 1
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16; % Fonts
 panelHeight = 0.2; panelStartHeight = 0.8; backgroundColor = 'w'; % Panels
 
-
-
 % Electrode Grid will now be shown according to session chosen
-% Show electrodes 
+% Show electrodes
 electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
 hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
 
@@ -88,9 +86,9 @@ hTimePeriodType = uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
 timingTextWidth = 0.5; timingBoxWidth = 0.25;
 hTimingPanel = uipanel('Title','X and Y Limits','fontSize', fontSizeLarge, ...
     'Unit','Normalized','Position',[0.5 panelStartHeight 0.25 panelHeight]);
-timingHeight = 1/6; 
+timingHeight = 1/6;
 
-signalRange = [-0.25 0.5]; fftRange = [0 100];
+signalRange = [-0.25 0.5]; fftRange = [0 50];
 
 % Signal Range
 uicontrol('Parent',hTimingPanel,'Unit','Normalized', ...
@@ -211,7 +209,6 @@ uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
     'Callback',{@plotData_Callback});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % Plots
 
 % Figure 1
@@ -235,7 +232,6 @@ hAmpCorr = getPlotHandles(4,1,[0.28 0.05 0.1 0.9],0,0.02,0); linkaxes(hAmpCorr);
 hSFPhiAlpha = getPlotHandles(4,1,[0.4 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiAlpha);
 hSFPhiSSVEP = getPlotHandles(4,1,[0.52 0.05 0.1 0.9],0,0.02,0); linkaxes(hSFPhiSSVEP);
 
-
 hBarRsc = getPlotHandles(4,1,[0.64 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarRsc);
 hBarFFCAlpha = getPlotHandles(4,1,[0.69 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCAlpha);
 hBarFFCSSVEP = getPlotHandles(4,1,[0.74 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCSSVEP);
@@ -243,7 +239,6 @@ hBarSFCAlpha = getPlotHandles(4,1,[0.79 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarS
 hBarSFCSSVEP = getPlotHandles(4,1,[0.84 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarSFCSSVEP);
 hBarAmpCorrAlpha = getPlotHandles(4,1,[0.89 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrAlpha);
 hBarAmpCorrSSVEP = getPlotHandles(4,1,[0.94 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrSSVEP);
-
 
 colorNamesSides = 'cmkk';
 
@@ -261,18 +256,11 @@ colorNamesSides = 'cmkk';
         
         % Show electrodes
         if strcmp(SessionIDString{1},'all (N=24)')
-        hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
+            hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
         else
-        electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
-        hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,SessionIDString{1});
+            electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
+            hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,SessionIDString{1});
         end
-        
-%         else
-%         electrodeGridPos1 = [0.05 panelStartHeight+panelHeight/2 0.2 panelHeight/2]; 
-%         hElectrodes1 = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,fileNameStringTMP);
-%         electrodeGridPos2 = [0.05 panelStartHeight-panelHeight/2 0.2 panelHeight/2];
-%         hElectrodes2 = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,fileNameStringTMP);
-%         end
         
         if strcmp(tpStr,'TargetOnset')
             tRange = [-0.5 0.1];
@@ -290,11 +278,11 @@ colorNamesSides = 'cmkk';
             plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o'); axis tight;
             hold(hBehavior(1),'on');
         end
-
+        
         for arraySide=1:3
-            if s==27||arraySide==3
+            if s==length(fileNameStringListAll)||arraySide==3
             else
-            showElectrodeLocationsMayo([],electrodeArray{arraySide},colorNamesSides(arraySide),hElectrodes,1,0,SessionIDString{1}); % Show electrodes used for analysis
+                showElectrodeLocationsMayo([],electrodeArray{arraySide},colorNamesSides(arraySide),hElectrodes,1,0,SessionIDString{1}); % Show electrodes used for analysis
             end
             for attCuePos=1:5
                 if attCuePos==3 || attCuePos==4
@@ -309,10 +297,8 @@ colorNamesSides = 'cmkk';
                 
                 plot(hFFT(arraySide),freqVals,squeeze(mean(fftData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hFFT(arraySide),'on');
-                
-              
-                
             end
+            
             makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue);
             makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue);
             makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue);
@@ -327,15 +313,15 @@ colorNamesSides = 'cmkk';
                 if attCuePos==3 || attCuePos==4
                     continue
                 end
-%                 disp([num2str(arraySide) num2str(attCuePos)])
+                %                 disp([num2str(arraySide) num2str(attCuePos)])
                 plot(hFFC(arraySide),freqValsMT,squeeze(mean(ffcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold (hFFC(arraySide),'on');
                 plot(hSFC(arraySide),freqValsMT,squeeze(mean(sfcData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold (hSFC(arraySide),'on');
                 plot(hAmpCorr(arraySide),freqVals,squeeze(mean(ampCorrData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold (hAmpCorr(arraySide),'on');
-                
             end
+            
             makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue);
             makeBarPlot(hBarFFCAlpha(arraySide),mean(ffcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
             makeBarPlot(hBarFFCSSVEP(arraySide),ffcData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
@@ -343,17 +329,15 @@ colorNamesSides = 'cmkk';
             makeBarPlot(hBarSFCSSVEP(arraySide),sfcData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
             makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrData{arraySide}(:,:,alphaPos),3),colorNamesAttCue);
             makeBarPlot(hBarAmpCorrSSVEP(arraySide),ampCorrData{arraySide}(:,:,ssvepPos),colorNamesAttCue);
-
         end
-        
         
         % Rescale plots and set the x and y scales
         yLims = getYLims(hPSTH);
         axis(hPSTH(1),[tRange 0 yLims(2)]);
-        set(hStimMin,'String',num2str(tRange(1))); set(hStimMax,'String',num2str(tRange(2))); % Set tRange 
+        set(hStimMin,'String',num2str(tRange(1))); set(hStimMax,'String',num2str(tRange(2))); % Set tRange
         set(hFRRangeMax,'String',num2str(yLims(2)));
         
-        yLims = getYLims(hERP); 
+        yLims = getYLims(hERP);
         axis(hERP(1),[tRange yLims]);
         set(hERPRangeMin,'String',num2str(yLims(1))); set(hERPRangeMax,'String',num2str(yLims(2)));
         
@@ -367,26 +351,25 @@ colorNamesSides = 'cmkk';
         
         yLims = getYLims(hSFC);
         axis(hSFC(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
-        set(hSFC(1),'YLim',[0 0.5]); %set(hFFTYMax,'String',num2str(yLims(2)));
+        set(hSFC(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
         
         yLims = getYLims(hAmpCorr);
         axis(hAmpCorr(1),[str2double(get(hFFTMin,'String')) str2double(get(hFFTMax,'String')) yLims]);
         set(hAmpCorr(1),'YLim',[0 1]); %set(hFFTYMax,'String',num2str(yLims(2)));
-        
-        
-        
-        yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 0 yLims(2)]);
+
+        yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 yLims]);
         yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 6 yLims]);
         yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 6 yLims]);
         ylim(hBehavior(1),[0 1]);
         
-        yLims = [0 0.5];axis(hBarRsc(1)),axis(hBarRsc(1),[0 6 yLims]);
-        yLims = [0 1];axis(hBarFFCAlpha(1)),axis(hBarFFCAlpha(1),[0 6 yLims]);
-        yLims = [0 1];axis(hBarFFCSSVEP(1)),axis(hBarFFCSSVEP(1),[0 6 yLims]);
-        yLims = [0 1];axis(hBarSFCAlpha(1)),axis(hBarSFCAlpha(1),[0 6 yLims]);
-        yLims = [0 1];axis(hBarSFCSSVEP(1)),axis(hBarSFCSSVEP(1),[0 6 yLims]);
-        yLims = [0 1];axis(hBarAmpCorrAlpha(1)),axis(hBarAmpCorrAlpha(1),[0 6 yLims]);
-        yLims = [0 1];axis(hBarAmpCorrSSVEP(1)),axis(hBarAmpCorrSSVEP(1),[0 6 yLims]);
+        yLims = [0 1]; 
+        axis(hBarRsc(1),[0 6 yLims]);
+        axis(hBarFFCAlpha(1),[0 6 yLims]);
+        axis(hBarFFCSSVEP(1),[0 6 yLims]);
+        axis(hBarSFCAlpha(1),[0 6 yLims]);
+        axis(hBarSFCSSVEP(1),[0 6 yLims]);
+        axis(hBarAmpCorrAlpha(1),[0 6 yLims]);
+        axis(hBarAmpCorrSSVEP(1),[0 6 yLims]);
         
         % Labels
         xlabel(hPSTH(3),'Time (s)'); title(hPSTH(1),'Firing Rate (spikes/s)');
@@ -396,7 +379,6 @@ colorNamesSides = 'cmkk';
         title(hBarFR(1),'Firing Rate');
         title(hBarAlpha(1),'Alpha');
         title(hBarSSVEP(1),'SSVEP');
-        
         
         xlabel(hFFC(4),'Frequency (Hz)'); title(hFFC(1),'FFC');
         xlabel(hSFC(4),'Frequency (Hz)'); title(hSFC(1),'SFC');
@@ -410,11 +392,7 @@ colorNamesSides = 'cmkk';
         title(hBarSFCSSVEP(1),'SFC_S_S_V_E_P');
         title(hBarAmpCorrAlpha(1),'amp_A_l_p_h_a');
         title(hBarAmpCorrSSVEP(1),'amp_S_S_V_E_P');
-        
-        
-        
 
-        
         title(hBehavior(1),'Behavior (Fraction Correct)');
         
         for arraySide=1:3
@@ -434,6 +412,10 @@ colorNamesSides = 'cmkk';
         axis(hPSTH(1),[tRange str2double(get(hFRRangeMin,'String')) str2double(get(hFRRangeMax,'String'))]);
         axis(hERP(1),[tRange str2double(get(hERPRangeMin,'String')) str2double(get(hERPRangeMax,'String'))]);
         axis(hFFT(1),[fRange str2double(get(hFFTYMin,'String')) str2double(get(hFFTYMax,'String'))]);
+        
+        xlim(hFFC(1),fRange);
+        xlim(hSFC(1),fRange);
+        xlim(hAmpCorr(1),fRange);
     end
     function holdOn_Callback(~,~)
         holdOnState = get(hHoldOn,'Value');
@@ -492,8 +474,7 @@ colorNamesSides = 'cmkk';
         claGivenPlotHandle(hBarFR);
         claGivenPlotHandle(hBarAlpha);
         claGivenPlotHandle(hBarSSVEP);
-        claGivenPlotHandle(hBehavior);        
-        
+        claGivenPlotHandle(hBehavior);
         
         claGivenPlotHandle(hFFC);
         claGivenPlotHandle(hSFC);
@@ -554,13 +535,12 @@ if length(fileNameStringTMP)>1
                 fftData{k} = cat(2,fftData{k},fftDataTMP{k});
                 alphaData{k} = cat(2,alphaData{k},alphaDataTMP{k});
                 ssvepData{k} = cat(2,ssvepData{k},ssvepDataTMP{k});
-                ampCorrData{k} = cat(2,ampCorrData{k},ampCorrDataTMP{k});
             else
                 error('freqVals do not match');
             end
         end
         
-        for k=1:4 % 1- Right Array elec pairs 2-Left Array elec pairs 3-Intra-hemispheric pairwise combined 4-inter-hemispheric pairwise rSC 
+        for k=1:4 % 1- Right Array elec pairs 2-Left Array elec pairs 3-Intra-hemispheric pairwise combined 4-inter-hemispheric pairwise rSC
             if isequal(freqValsMT,freqValsMTTMP)
                 ffcData{k} = cat(2,ffcData{k},ffcDataTMP{k});
                 ffPhiData{k} = cat(2,ffPhiData{k},ffPhiDataTMP{k});
@@ -568,6 +548,12 @@ if length(fileNameStringTMP)>1
                 sfPhiData{k} = cat(2,sfPhiData{k},sfPhiDataTMP{k});
             else
                 error('freqValsMT do not match')
+            end
+            
+            if isequal(freqVals,freqValsTMP)
+                ampCorrData{k} = cat(2,ampCorrData{k},ampCorrDataTMP{k});
+            else
+                error('freqVals do not match');
             end
             
             rSCData{k} = cat(2,rSCData{k},rSCDataTMP{k});
@@ -598,8 +584,7 @@ else
     % get Good Electrodes
     electrodeArray = getGoodElectrodes(folderSourceString,fileNameString,neuronType,populationType);
     % get Good Electrode Pairs
-    [electrodepairsWithinHemisphere, electrodePairsAcrossHemispheres] = getGoodElectrodePairs(electrodeArray);
-
+    [electrodepairsWithinHemisphere,electrodePairsAcrossHemispheres] = getGoodElectrodePairs(electrodeArray);
     
     % Get Spike and LFP data for 5 conditions - 0V, 1V, 0I, 1I and N
     attCueList = [{'0V'} {'1V'} {'0I'} {'1I'} {'N'}];
@@ -642,16 +627,19 @@ else
     Fs = round(1/(timeVals(2)-timeVals(1)));
     pos = find(timeVals>=timeRange(1),1)+ (0:diff(timeRange)*Fs-1);
     freqVals = 0:1/(diff(timeRange)):Fs-1/(diff(timeRange));
-       
+    
     alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
     ssvepPos = find(freqVals==ssvepFreqHz);
     
     for i=1:2 % Each array side
         eList = electrodeArray{i};
         ePairList = electrodepairsWithinHemisphere{i};
-        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP ampCorrTMP rSCTMP 
-        clear ffcTMP ffPhiTMP sfcTMP sfPhiTMP 
+        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP ampCorrTMP rSCTMP
+        clear ffcTMP ffPhiTMP sfcTMP sfPhiTMP
+        
         for j=1:numConditions
+            disp(['numArray:' num2str(i) ', numCondition:' num2str(j)]);
+            
             % Firing Rates
             for k=1:length(eList)
                 [psthDataTMP(j,k,:),xsFR] = getPSTH(spikeData{j}.segmentedSpikeData(eList(k),:),binWidthMS,[timeVals(1) timeVals(end)]);
@@ -667,13 +655,12 @@ else
             ssvepDataTMP(j,:) = fftDataTMP(j,:,ssvepPos); %#ok<FNDSB>
             
             % Amplitude Correlation
-            ampCorrTMP(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),ePairList); 
+            ampCorrTMP(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),ePairList);
             
             % Spike-count Correlation (rSC)
-            rSCTMP(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,ePairList,timeRange,1000/Fs);
+            rSCTMP(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,ePairList,timeRange);
             
             % Coherency and Spike-LFP Phase Analysis Within Hemisphere(FFC,SFC,sfPhi)
-            disp(['numArray:' num2str(i) ', numCondition:' num2str(j)]);
             [ffcTMP(j,:,:),ffPhiTMP(j,:,:),sfcTMP(j,:,:),sfPhiTMP(j,:,:),freqValsMT] = getCoherencyMeasures(lfpData{j}.segmentedLFPData(:,:,pos),spikeData{j}.segmentedSpikeData,ePairList,tapers,lfpData{j}.timeVals(pos),timeRange);
         end
         
@@ -694,21 +681,19 @@ else
     
     % Combine Data across both arrays/hemispheres
     combinedDataPos = 3;
-    for iCondition = 1:numConditions
-    psthData{combinedDataPos} = combineDataAcrossBothArrays(psthData); 
-    firingRates{combinedDataPos} = combineDataAcrossBothArrays(firingRates); 
+    psthData{combinedDataPos} = combineDataAcrossBothArrays(psthData);
+    firingRates{combinedDataPos} = combineDataAcrossBothArrays(firingRates);
     erpData{combinedDataPos} = combineDataAcrossBothArrays(erpData);
     fftData{combinedDataPos} = combineDataAcrossBothArrays(fftData);
     alphaData{combinedDataPos} = combineDataAcrossBothArrays(alphaData);
     ssvepData{combinedDataPos} = combineDataAcrossBothArrays(ssvepData);
     ampCorrData{combinedDataPos} = combineDataAcrossBothArrays(ampCorrData);
     rSCData{combinedDataPos} = combineDataAcrossBothArrays(rSCData);
-
+    
     ffcData{combinedDataPos} = combineDataAcrossBothArrays(ffcData);
     ffPhiData{combinedDataPos} = combineDataAcrossBothArrays(ffPhiData);
     sfcData{combinedDataPos} = combineDataAcrossBothArrays(sfcData);
     sfPhiData{combinedDataPos} = combineDataAcrossBothArrays(sfPhiData);
-    end
     
     % AmpCorr, rSC & Coherency analysis across hemispheres
     disp('Working on amplitude correlation Data, rSC Data and Coherency Data for electrode pairs across hemispheres')
@@ -716,13 +701,12 @@ else
         % Amplitude Correlation analysis across Hemispheres
         ampCorrData_AH(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),electrodePairsAcrossHemispheres);
         % rSC Analysis Across Hemispheres
-        rSCData_AH(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,electrodePairsAcrossHemispheres,timeRange,1000/Fs);
+        rSCData_AH(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,electrodePairsAcrossHemispheres,timeRange);
         % Coherency and Spike-LFP Phase Analysis Across Hemispheres(FFC,SFC,sfPhi)
         [ffcData_AH(j,:,:),ffPhiData_AH(j,:,:),sfcData_AH(j,:,:),sfPhiData_AH(j,:,:),~] = getCoherencyMeasures(lfpData{j}.segmentedLFPData(:,:,pos),spikeData{j}.segmentedSpikeData,electrodePairsAcrossHemispheres,tapers,lfpData{j}.timeVals(pos),timeRange); %AH -across Hemisheres
     end
     
-    % Combining Coherency Data within Hemispheres and across hemispheres
-    % together
+    % Combining Coherency Data within Hemispheres and across hemispheres together
     InterHemisphericCoherencyPos = 4;
     ffcData{InterHemisphericCoherencyPos} = ffcData_AH;
     ffPhiData{InterHemisphericCoherencyPos} = ffPhiData_AH;
@@ -784,31 +768,31 @@ all=union(sua,mua,'sorted');
 
 spkData{1}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H1V_StimOnset_Spikes']));
 spkData{2}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H0V_StimOnset_Spikes']));
- 
- if strcmp(neuronType,'SUA')
+
+if strcmp(neuronType,'SUA')
     electrodeArray{1}=intersect(sua,electrodeArrayPos(:,8:13)); % Right Array
     electrodeArray{2}=intersect(sua,electrodeArrayPos(:,1:6)); % Left Array
-
- elseif strcmp(neuronType,'MUA')
+    
+elseif strcmp(neuronType,'MUA')
     electrodeArray{1}=intersect(mua,electrodeArrayPos(:,8:13));
     electrodeArray{2}=intersect(mua,electrodeArrayPos(:,1:6));
- 
- elseif strcmp(neuronType,'All')
-     electrodeArray{1}=intersect(all,electrodeArrayPos(:,8:13));
-     electrodeArray{2}=intersect(all,electrodeArrayPos(:,1:6));
- end
- 
- if strcmp(populationType,'Stimulated')
-     for j=1:2 %for each array
-         elecList=electrodeArray{j}(:);
-         for k=1:length(elecList)
-             FRBl(j,k) =mean(getSpikeCounts(spkData{j}.segmentedSpikeData(elecList(k),:),[-0.25 0]))/diff([-0.25 0]);
-             FRSt(j,k) =mean(getSpikeCounts(spkData{j}.segmentedSpikeData(elecList(k),:),[0.25 0.5]))/diff([0.25 0.5]);
-         end
-         delFR{j}=FRSt(j,:)-FRBl(j,:);
-         electrodeArray{j}=elecList(find(delFR{j}>5)); %#ok<FNDSB> % Threshold for choosing stimulated units is 5 spikes/s
-     end
- end
+    
+elseif strcmp(neuronType,'All')
+    electrodeArray{1}=intersect(all,electrodeArrayPos(:,8:13));
+    electrodeArray{2}=intersect(all,electrodeArrayPos(:,1:6));
+end
+
+if strcmp(populationType,'Stimulated')
+    for j=1:2 %for each array
+        elecList=electrodeArray{j}(:);
+        for k=1:length(elecList)
+            FRBl(j,k) =mean(getSpikeCounts(spkData{j}.segmentedSpikeData(elecList(k),:),[-0.25 0]))/diff([-0.25 0]);
+            FRSt(j,k) =mean(getSpikeCounts(spkData{j}.segmentedSpikeData(elecList(k),:),[0.25 0.5]))/diff([0.25 0.5]);
+        end
+        delFR{j}=FRSt(j,:)-FRBl(j,:);
+        electrodeArray{j}=elecList(find(delFR{j}>5)); %#ok<FNDSB> % Threshold for choosing stimulated units is 5 spikes/s
+    end
+end
 end
 function [electrodepairsWithinHemisphere, electrodePairsAcrossHemispheres] = getGoodElectrodePairs(electrodeArray)
 
@@ -819,9 +803,9 @@ end
 
 % get good Electrode pairs - across hemispheres
 electrodePairsAcrossHemispheres = setdiff(combnk([electrodeArray{1}; electrodeArray{2}],2),[electrodepairsWithinHemisphere{1};electrodepairsWithinHemisphere{2}],'rows');
-    
+
 end
-function [ffc,ffPhi,sfc,sfPhi,freqValsMT,N] = getCoherencyMeasures(lfpData,spikeData,electrodePair,tapers,timeVals,timeRange)
+function [ffc,ffPhi,sfc,sfPhi,freqValsMT] = getCoherencyMeasures(lfpData,spikeData,electrodePair,tapers,timeVals,timeRange)
 
 % Set up MT
 Fs              = round(1/(timeVals(2)-timeVals(1)));
@@ -831,117 +815,116 @@ params.Fs       = Fs;
 params.fpass    = [0 100];
 params.trialave = 1;
 
-% spk = convertSpikeTimes2Bins(spikeData,timeRange,1000/Fs);
-N = size(lfpData,2);
-
 disp('Working on FFC Data')
 % Field-Field coherence
 for i=1:size(electrodePair,1)
     clear lfp1 lfp2
-    disp(['FFC ElectrodePair:',num2str(i)]);
+%    disp(['FFC ElectrodePair:',num2str(i)]);
     lfp1 = squeeze(lfpData(electrodePair(i,1),:,:));
     lfp2 = squeeze(lfpData(electrodePair(i,2),:,:));
-
-    [ffc(i,:),ffPhi(i,:),S12_ffc(i,:),S1_ffc(i,:),S2_ffc(i,:),freqFFC]=coherencyc(lfp1',lfp2',params); %#ok<ASGLU,*AGROW>
+    
+    [ffc(i,:),ffPhi(i,:),~,~,~,freqFFC]=coherencyc(lfp1',lfp2',params); %#ok<*AGROW>
 end
 
 % if params.trialave = 0;
 % [ppc_ffc,PLF_ffc,without_phaseCovariation_ffc,traditional_ffc]= computeCoherencyFromSpectrum(S1_ffc,S2_ffc,S12_ffc,params);
 % ffc = traditional_ffc;
 % end
-    
 
 disp('Working on SFC Data')
 % Spike-Field coherence
 for i=1:size(electrodePair,1)
     clear lfp spk
-    disp(['SFC ElectrodePair:',num2str(i)]);
+%    disp(['SFC ElectrodePair:',num2str(i)]);
     lfp = squeeze(lfpData(electrodePair(i,1),:,:));
     spk = convertSpikeTimes2Bins(spikeData(electrodePair(i,2),:,:),timeRange,1000/Fs);
-    [sfc(i,:),sfPhi(i,:),S12_sfc(i,:),S1_sfc(i,:),S2_sfc(i,:),freqSFC]=coherencycpb(lfp',spk,params); %#ok<ASGLU,*AGROW>
+    [sfc(i,:),sfPhi(i,:),~,~,~,freqSFC]=coherencycpb(lfp',spk,params); %#ok<*AGROW>
 end
 
 % Sanity Check
-if isequal(freqFFC,freqSFC) %,freqVals(1:26)
+if isequal(freqFFC,freqSFC)
     freqValsMT = freqFFC;
 else
-    error('freqVals from fft & multitaper do not match!')
+    error('freqVals from FFC & SFC do not match!')
 end
 
 end
 function ampCorr = getAmplitudeCorrelation(lfpData,electrodePair)
 disp('Working on amplitude Correlation Data')
-fftDataTrialWise = log10(abs(fft(lfpData,[],3)));
+fftDataTrialWise = abs(fft(lfpData,[],3));
 for k = 1:size(electrodePair,1)
     clear fft1 fft2
-    disp(['AmpCorrData,electrodePair:',num2str(k)])
-    disp(['Amplitude Correlation ElectrodePair:',num2str(k)])
+%    disp(['AmpCorrData,electrodePair:',num2str(k)])
+%    disp(['Amplitude Correlation ElectrodePair:',num2str(k)])
     fft1 = squeeze(fftDataTrialWise(electrodePair(k,1),:,:));
     fft2 = squeeze(fftDataTrialWise(electrodePair(k,2),:,:));
     ampCorr(k,:) = diag(corr(fft1,fft2))';
 end
 end
-function rSC = getSpikeCountCorrelation(spikeData,electrodePair,tRangeS,dMS) % Computes for all Electrode pairs
+function rSC = getSpikeCountCorrelation(spikeData,electrodePair,tRangeS) % Computes for all Electrode pairs
 disp('Working on rSc Data')
 for k=1:size(electrodePair,1)
-    [~,~,rSC(k),~] = getCCG(spikeData(electrodePair(k,1),:),spikeData(electrodePair(k,2),:),tRangeS,dMS);
+    clear h1 h2
+    h1 = getSpikeCounts(spikeData(electrodePair(k,1),:),tRangeS);
+    h2 = getSpikeCounts(spikeData(electrodePair(k,2),:),tRangeS);
+    rSC(k) = (mean(h1.*h2) - mean(h1)*mean(h2))/(std(h1)*std(h2));
 end
 end
-function [ccg,xs,rSC,ccgShift] = getCCG(spike1,spike2,tRangeS,dMS)
-% This program computes the CCG between two spike trains computed using the
-% equation from Kohn and Smith, 2005.
-
-% Inputs
-% spike1, spike2: cell arrays of spike times in seconds. They must be of
-% the same length 
-% tRangeS = [tMinS tMaxS] is the time range (in seconds)
-% dMS: The time resolution at which spikes are binned (default: 1 ms)
-if ~exist('dMS','var');                    dMS=1;                        end
-
-% Convert spike times to binned analog data of zeros and ones
-analogSpikeTrain1 = convertSpikeTimes2Bins(spike1,tRangeS,dMS);
-analogSpikeTrain2 = convertSpikeTimes2Bins(spike2,tRangeS,dMS);
-
-for i=1:size(analogSpikeTrain1,2)
-    R12(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i),'unbiased')/(dMS/1000); %#ok<*AGROW>
-end
-
-% Shift predictor
-for i=1:size(analogSpikeTrain1,2)-1
-    R12Shift(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i+1),'unbiased')/(dMS/1000);
-end
-
-h1 = getSpikeCounts(spike1,tRangeS);
-h2 = getSpikeCounts(spike2,tRangeS);
-
-% mean fr
-dT = diff(tRangeS);
-meanFR1 = mean(h1)/dT;
-meanFR2 = mean(h2)/dT;
-
-% CCG
-ccg = mean(R12)/sqrt(meanFR1*meanFR2);
-ccgShift = mean(R12Shift)/sqrt(meanFR1*meanFR2);
-
-dS=dMS/1000;
-xs = -dT+dS:dS:dT-dS;
-
-% rSC
-rSC = (mean(h1.*h2) - mean(h1)*mean(h2))/(std(h1)*std(h2));
-end
+% function [ccg,xs,rSC,ccgShift] = getCCG(spike1,spike2,tRangeS,dMS)
+% % This program computes the CCG between two spike trains computed using the
+% % equation from Kohn and Smith, 2005.
+% 
+% % Inputs
+% % spike1, spike2: cell arrays of spike times in seconds. They must be of
+% % the same length
+% % tRangeS = [tMinS tMaxS] is the time range (in seconds)
+% % dMS: The time resolution at which spikes are binned (default: 1 ms)
+% if ~exist('dMS','var');                    dMS=1;                        end
+% 
+% % Convert spike times to binned analog data of zeros and ones
+% analogSpikeTrain1 = convertSpikeTimes2Bins(spike1,tRangeS,dMS);
+% analogSpikeTrain2 = convertSpikeTimes2Bins(spike2,tRangeS,dMS);
+% 
+% for i=1:size(analogSpikeTrain1,2)
+%     R12(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i),'unbiased')/(dMS/1000); %#ok<*AGROW>
+% end
+% 
+% % Shift predictor
+% for i=1:size(analogSpikeTrain1,2)-1
+%     R12Shift(i,:) = xcorr(analogSpikeTrain1(:,i),analogSpikeTrain2(:,i+1),'unbiased')/(dMS/1000);
+% end
+% 
+% h1 = getSpikeCounts(spike1,tRangeS);
+% h2 = getSpikeCounts(spike2,tRangeS);
+% 
+% % mean fr
+% dT = diff(tRangeS);
+% meanFR1 = mean(h1)/dT;
+% meanFR2 = mean(h2)/dT;
+% 
+% % CCG
+% ccg = mean(R12)/sqrt(meanFR1*meanFR2);
+% ccgShift = mean(R12Shift)/sqrt(meanFR1*meanFR2);
+% 
+% dS=dMS/1000;
+% xs = -dT+dS:dS:dT-dS;
+% 
+% % rSC
+% rSC = (mean(h1.*h2) - mean(h1)*mean(h2))/(std(h1)*std(h2));
+% end
 function combinedData = combineDataAcrossBothArrays(data)
 if numel(size(data{1}))==2
-Data{1} = cat(2,data{1}(1,:),data{2}(2,:)); % Attend In [(R)H0V & (L)H1V]
-Data{2} = cat(2,data{1}(2,:),data{2}(1,:)); % Attend Out [(R)(H1V & (L)H0V)]
-Data{3} = cat(2,data{1}(3,:),data{2}(4,:)); % Uncued     [(R)H0I & (L)H1I] 
-Data{4} = cat(2,data{1}(4,:),data{2}(3,:)); % Uncued     [(R)H1I & (L)H0I)
-Data{5} = cat(2,data{1}(5,:),data{2}(5,:)); % Neutral    [(R)N & (R)N]    
+    Data{1} = cat(2,data{1}(1,:),data{2}(2,:)); % Attend In - Valid [(R)H0V & (L)H1V]
+    Data{2} = cat(2,data{1}(2,:),data{2}(1,:)); % Attend Out - Valid [(R)(H1V & (L)H0V)]
+    Data{3} = cat(2,data{1}(3,:),data{2}(4,:)); % Attend In - Invalid [(R)H0I & (L)H1I]
+    Data{4} = cat(2,data{1}(4,:),data{2}(3,:)); % Attend Out - Invalid [(R)H1I & (L)H0I)
+    Data{5} = cat(2,data{1}(5,:),data{2}(5,:)); % Neutral    [(R)N & (L)N]
 elseif numel(size(data{1}))==3
-Data{1} = cat(2,data{1}(1,:,:),data{2}(2,:,:)); % Attend In [(R)H0V & (L)H1V]
-Data{2} = cat(2,data{1}(2,:,:),data{2}(1,:,:)); % Attend Out [(R)(H1V & (L)H0V)]
-Data{3} = cat(2,data{1}(3,:,:),data{2}(4,:,:)); % Uncued     [(R)H0I & (L)H1I] 
-Data{4} = cat(2,data{1}(4,:,:),data{2}(3,:,:)); % Uncued     [(R)H1I & (L)H0I)
-Data{5} = cat(2,data{1}(5,:,:),data{2}(5,:,:)); % Neutral    [(R)N & (R)N]
+    Data{1} = cat(2,data{1}(1,:,:),data{2}(2,:,:)); % Attend In - Valid [(R)H0V & (L)H1V]
+    Data{2} = cat(2,data{1}(2,:,:),data{2}(1,:,:)); % Attend Out - Valid [(R)(H1V & (L)H0V)]
+    Data{3} = cat(2,data{1}(3,:,:),data{2}(4,:,:)); % Attend In - Invalid [(R)H0I & (L)H1I]
+    Data{4} = cat(2,data{1}(4,:,:),data{2}(3,:,:)); % Attend Out - Invalid [(R)H1I & (L)H0I)
+    Data{5} = cat(2,data{1}(5,:,:),data{2}(5,:,:)); % Neutral    [(R)N & (L)N]
 end
 
 combinedData = cat(1,Data{1},Data{2},Data{3},Data{4},Data{5});
