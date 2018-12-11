@@ -71,7 +71,7 @@ hOriChangeType = uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
     'Style','popup','String',orientationChangeString ,'FontSize',fontSizeSmall);
 
 % Analysis Interval
-analysisIntervalString = [{'Baseline'} {'StimOnset'} {'TargetOnset'}];
+analysisIntervalString = [{'Baseline'} {'StimOnset'} {'TargetOnset_250ms'} {'TargetOnset_500ms'}];
 uicontrol('Parent',hParameterPanel,'Unit','Normalized', ...
     'Position',[0 1-6*paramsHeight 0.5 paramsHeight], ...
     'Style','text','String','Time Period','FontSize',fontSizeSmall);
@@ -267,7 +267,7 @@ colorNamesSides = 'cmkk';
             hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,SessionIDString{1});
         end
         
-        if strcmp(tpStr,'TargetOnset')
+        if strcmp(tpStr(1:11),'TargetOnset')
             tRange = [-0.5 0.1];
         else
             tRange = [-0.25 0.5];
@@ -619,8 +619,12 @@ else
             timeRange = [0.25 0.5];
             lfpData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_StimOnset_LFP']));
             spikeData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_StimOnset_Spikes']));
-        elseif strcmp(tpStr,'TargetOnset')
-            timeRange = [-0.5 0];
+        elseif strcmp(tpStr(1:11),'TargetOnset')
+            if strcmp(tpStr,'TargetOnset_250ms')
+                timeRange = [-0.25 0];
+            elseif strcmp(tpStr,'TargetOnset_500ms')
+                timeRange = [-0.5 0];
+            end  
             lfpData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_TargetOnset_LFP']));
             spikeData{i}=load(fullfile(folderName,[fileNameString tStr attCueList{i} '_TargetOnset_Spikes']));
         end
