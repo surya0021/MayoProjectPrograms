@@ -2,7 +2,7 @@
 
 function displaySingleChannelGRFMayo(fileNameString,activeSide,folderSourceString)
 
-if ~exist('folderSourceString','var');   folderSourceString='F:\Projects\MayoProject\';       end
+if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
 
 % Folders and file names
 folderName = fullfile(folderSourceString,'Data','segmentedData',fileNameString);
@@ -350,6 +350,10 @@ hSigmaPlot        = getPlotHandles(1,length(p.sValsUnique),sigmaGrid,0.002);
 
 % Load analog Data
 lfpData = load(fullfile(folderName,'lfpData.mat'));
+
+goodStimNums = load(fullfile(folderName,['goodStimNums' num2str(activeSide) '.mat']));
+lfpData.segmentedLFPData = lfpData.segmentedLFPData(:,goodStimNums.goodStimNums,:);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % functions
     function plotData_Callback(~,~)
