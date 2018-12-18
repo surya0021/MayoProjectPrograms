@@ -582,6 +582,11 @@ if length(fileNameStringTMP)>1
             else
                 error('freqVals do not match');
             end
+            if isequal(freqValsMT,freqValsMTTMP)
+                mtPSData{k} = cat(2,mtPSData{k},mtPSDataTMP{k});
+            else
+                error('freqValsMT do not match');
+            end
         end
         
         for k=1:4 % 1- Right Array elec pairs 2-Left Array elec pairs 3-Intra-hemispheric pairwise combined 4-inter-hemispheric pairwise rSC
@@ -590,7 +595,7 @@ if length(fileNameStringTMP)>1
                 ffPhiData{k} = cat(2,ffPhiData{k},ffPhiDataTMP{k});
                 sfcData{k} = cat(2,sfcData{k},sfcDataTMP{k});
                 sfPhiData{k} = cat(2,sfPhiData{k},sfPhiDataTMP{k});
-                mtPSData{k} = cat(2,mtPSData{k},mtPSDataTMP{k});
+                
             else
                 error('freqValsMT do not match')
             end
