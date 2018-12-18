@@ -188,6 +188,10 @@ hChooseColor = uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
     'Position',[0.6 5*plotOptionsHeight 0.4 plotOptionsHeight], ...
     'Style','popup','String',colorString,'FontSize',fontSizeSmall);
 
+hAnalyzeEqualStimReapeats = uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
+    'Position',[0 3*plotOptionsHeight 1 plotOptionsHeight], ...
+    'Style','togglebutton','String','Analyze Equal Stimulus Repeats for cues','FontSize',fontSizeMedium);
+
 hShowAbsoluteVals = uicontrol('Parent',hPlotOptionsPanel,'Unit','Normalized', ...
     'Position',[0 2*plotOptionsHeight 1 plotOptionsHeight], ...
     'Style','togglebutton','String','Show Absolute Measures','FontSize',fontSizeMedium);
@@ -258,6 +262,7 @@ colorNamesSides = 'cmkk';
         
         colorNamesAttCue = colorNames{get(hChooseColor,'val')};
         showAbsoluteValsFlag = get(hShowAbsoluteVals,'val');
+        analyzeEqualStimRepeatsFlag = get(hAnalyzeEqualStimReapeats,'val');
         
         % Show electrodes
         if strcmp(SessionIDString{1},'all (N=24)')
@@ -277,7 +282,7 @@ colorNamesSides = 'cmkk';
         tapers = [1 1];
         
         % Get data
-        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers); %#ok<ASGLU>
+        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsExcluded] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag); %#ok<ASGLU>
         
         for attCuePos=1:5
             plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o'); axis tight;
@@ -539,16 +544,16 @@ colorNamesSides = 'cmkk';
         end
     end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsExcluded] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag)
 
 numDatasets = length(fileNameStringTMP);
 disp(['Working on dataset 1 of ' num2str(numDatasets)]);
-[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers); % First session
+[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsExcluded] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag); % First session
 
 if length(fileNameStringTMP)>1
     for i=2:numDatasets
         disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameStringTMP))]);
-        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,fftPSDataTMP,mtPSDataTMP,ampCorrDataTMP,rSCDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,ffppcDataTMP,sfppcDataTMP,freqValsPPCTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers);
+        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,fftPSDataTMP,mtPSDataTMP,ampCorrDataTMP,rSCDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,ffppcDataTMP,sfppcDataTMP,freqValsPPCTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP,stimRepsSelectedTMP,stimRepsExcludedTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag);
         
         perCorrect = perCorrect + perCorrectTMP;
         uniqueOrientationChangeDeg = uniqueOrientationChangeDeg + uniqueOrientationChangeDegTMP;
@@ -605,18 +610,23 @@ if length(fileNameStringTMP)>1
             
             rSCData{k} = cat(2,rSCData{k},rSCDataTMP{k});
         end
+%     stimRepsSelected{i}=stimRepsSelectedTMP;   
     end
     perCorrect = perCorrect/numDatasets;
     uniqueOrientationChangeDeg = uniqueOrientationChangeDeg/numDatasets;
 end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsExcluded] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag)
 
 folderSave = fullfile(folderSourceString,'Data','savedData');
 makeDirectory(folderSave);
-
-fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '.mat']);
-coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(1)) '.mat']);
+if analyzeEqualStimRepeatsFlag
+    fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_EqualStimReps.mat']);
+    coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(1)) '_EqualStimReps.mat']);    
+else
+    fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '.mat']);
+    coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(1)) '.mat']);
+end
 
 if exist(fileToSave,'file')&& exist(coherencyFileToSave,'file')
     disp(['Loading file ' fileToSave]);
@@ -671,8 +681,18 @@ else
             lfpData{i}.segmentedLFPData = lfpData{i}.segmentedLFPData(:,selectedPos,:);
             spikeData{i}.segmentedSpikeData = spikeData{i}.segmentedSpikeData(:,selectedPos);
         end
+    end
+    
+    if analyzeEqualStimRepeatsFlag
+       [lfpData,spikeData,stimRepsSelected,stimRepsExcluded] = getEqualStimRepeatsForEachCueingCondition(lfpData,spikeData); 
+    end
+    
+        
+    % display Stim Repeats for each Attention condition for Trial Outcome selected    
+    for i=1:numConditions
         disp([fileNameString tStr attCueList{i} ', Stimulus repeats: ' num2str(size(lfpData{i}.segmentedLFPData,2))]);
     end
+
     % Frequency analysis
     timeVals=lfpData{1}.timeVals;
     Fs = round(1/(timeVals(2)-timeVals(1)));
@@ -790,8 +810,13 @@ else
     sfppcData{InterHemisphericCoherencyPos} = sfppcData_AH;
     
     % Save data
-    save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
-    save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
+    if analyzeEqualStimRepeatsFlag
+        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsExcluded');
+        save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
+    else
+        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
+        save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
+    end
 end
 end
 function [colorString, colorNames] = getColorString
@@ -878,6 +903,26 @@ end
 % get good Electrode pairs - across hemispheres
 electrodePairsAcrossHemispheres = setdiff(combnk([electrodeArray{1}; electrodeArray{2}],2),[electrodepairsWithinHemisphere{1};electrodepairsWithinHemisphere{2}],'rows');
 
+end
+function[lfpData,spikeData,stimRepsSelected,stimRepsExcluded] = getEqualStimRepeatsForEachCueingCondition(lfpData,spikeData)
+
+attCueList = [{'0V'} {'1V'} {'0I'} {'1I'} {'N'}];
+numConditions = length(attCueList);
+
+for i=1:numConditions % reading number of StimReps for each attCue from LFP Data
+    stimReps(i) = size(lfpData{i}.segmentedLFPData,2);
+end
+minStimReps = min(stimReps([1:2 5]));
+
+for i=1:numConditions
+    if i==3||i==4
+        continue
+    end
+    stimRepsSelected{i} = sort(randsample(stimReps(i),minStimReps));
+    stimRepsExcluded{i} = setdiff(1:stimReps(i),stimRepsSelected{i});
+    lfpData{i}.segmentedLFPData = lfpData{i}.segmentedLFPData(:,stimRepsSelected{i},:);
+    spikeData{i}.segmentedSpikeData = spikeData{i}.segmentedSpikeData(:,stimRepsSelected{i});
+end
 end
 function [psd,freqValsMT]=  getPSDdata(lfpData,electrodeList,tapers,timeVals)
 
