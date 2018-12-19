@@ -635,9 +635,11 @@ if length(fileNameStringTMP)>1
         
         perCorrect = perCorrect + perCorrectTMP;
         uniqueOrientationChangeDeg = uniqueOrientationChangeDeg + uniqueOrientationChangeDegTMP;
-        
+        if analyzeEqualStimRepeatsFlag
         stimRepsSelected(i) = stimRepsSelectedTMP; 
         stimRepsDiscarded(i) = stimRepsDiscardedTMP;
+        else
+        end
         
         for k=1:2
             electrodeArray{k} = cat(1,electrodeArray{k},electrodeArrayTMP{k});
@@ -770,6 +772,9 @@ else
     
     if analyzeEqualStimRepeatsFlag
        [lfpData,spikeData,stimRepsSelected,stimRepsDiscarded] = getEqualStimRepeatsForEachCueingCondition(lfpData,spikeData,tStr); 
+    else
+        stimRepsSelected = 'all';
+        stimRepsDiscarded = [];
     end
     
         
@@ -899,7 +904,7 @@ else
         save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsDiscarded');
         save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
     else
-        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg');
+        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsDiscarded');
         save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
     end
 end
