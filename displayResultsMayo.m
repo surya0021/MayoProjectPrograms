@@ -88,7 +88,7 @@ hAnalysisPanel = uipanel('Title','Analysis Options','fontSize', fontSizeLarge, .
 analysisHeight=1/6;
 
 % Analysis Method
-analysisMethodString = [{'FFT Amplitude'},{'FFT Power'},{'Multi-Taper'},{'Matching Pursuit'}];
+analysisMethodString = [{'FFT Amplitude'},{'FFT Power'},{'Multi-Taper'}];
 uicontrol('Parent',hAnalysisPanel,'Unit','Normalized', ...
     'Position',[0 1-analysisHeight 0.5 analysisHeight],...
     'Style','text','String','Analysis Method','FontSize',fontSizeSmall);
@@ -282,7 +282,7 @@ hFFT = getPlotHandles(3,1,[0.6 0.05 0.1 0.7],0,0.05,0); linkaxes(hFFT);
 
 hBarFR = getPlotHandles(3,1,[0.75 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarFR);
 hBarAlpha = getPlotHandles(3,1,[0.82 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarAlpha);
-hBarSSVEP = getPlotHandles(3,1,[0.9 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarSSVEP);
+hBarGamma = getPlotHandles(3,1,[0.9 0.05 0.05 0.7],0,0.05,0); linkaxes(hBarGamma);
 
 % Figure 2 (electrode pairwise analysis results)
 set(matlab.ui.Figure,'units','normalized','outerposition',[0 0 1 1]) %Figure 2
@@ -294,11 +294,11 @@ hsfPPC = getPlotHandles(4,1,[0.52 0.05 0.1 0.9],0,0.02,0); linkaxes(hsfPPC);
 
 hBarRsc = getPlotHandles(4,1,[0.64 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarRsc);
 hBarFFCAlpha = getPlotHandles(4,1,[0.69 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCAlpha);
-hBarFFCSSVEP = getPlotHandles(4,1,[0.74 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCSSVEP);
+hBarFFCGamma = getPlotHandles(4,1,[0.74 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarFFCGamma);
 hBarSFCAlpha = getPlotHandles(4,1,[0.79 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarSFCAlpha);
-hBarSFCSSVEP = getPlotHandles(4,1,[0.84 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarSFCSSVEP);
+hBarSFCGamma = getPlotHandles(4,1,[0.84 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarSFCGamma);
 hBarAmpCorrAlpha = getPlotHandles(4,1,[0.89 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrAlpha);
-hBarAmpCorrSSVEP = getPlotHandles(4,1,[0.94 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrSSVEP);
+hBarAmpCorrGamma = getPlotHandles(4,1,[0.94 0.05 0.04 0.9],0,0.02,0); linkaxes(hBarAmpCorrGamma);
 
 colorNamesSides = 'cmkk';
 
@@ -340,16 +340,27 @@ colorNamesSides = 'cmkk';
         end
 
         % Get data
-        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag); %#ok<ASGLU>
+        [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,ampCorrMTData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag); %#ok<ASGLU>
         
         for attCuePos=1:5
             plot(hBehavior(1),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o'); axis tight;
             hold(hBehavior(1),'on');
         end
         
-        alphaRangeHz = [8 12]; ssvepFreqHz = 20;
+         for attCuePos=1:2:5
+            if attCuePos<5
+                plot(hBehavior(2),uniqueOrientationChangeDeg,(perCorrect(attCuePos,:)+perCorrect(attCuePos+1,:))/2,'color',colorNamesAttCue(attCuePos,:),'marker','o');
+                hold(hBehavior(2),'on');
+            else
+                plot(hBehavior(2),uniqueOrientationChangeDeg,perCorrect(attCuePos,:),'color',colorNamesAttCue(attCuePos,:),'marker','o');
+            end
+        end
+        
+        alphaRangeHz = [8 12]; ssvepFreqHz = 20; gammaRangeHz = [40 80]; lineNoiseFreqHz= 60;
         alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
         ssvepPos = find(freqVals==ssvepFreqHz);
+        lineNoisePos = find(freqVals==lineNoiseFreqHz);
+        gammaPos = setdiff(intersect(find(freqVals>=gammaRangeHz(1)),find(freqVals<=gammaRangeHz(2))),lineNoisePos);
         
         for arraySide=1:3
             if s==length(fileNameStringListAll)||arraySide==3
@@ -367,15 +378,15 @@ colorNamesSides = 'cmkk';
                 plot(hERP(arraySide),timeVals,squeeze(mean(erpData{arraySide}(attCuePos,:,:),2)),'color',colorNamesAttCue(attCuePos,:));
                 hold(hERP(arraySide),'on');
                 
-                clear dataFFT
+                clear dataFFT dataFFTPSD dataMTPSD
                 if showAbsoluteValsFlag
-                    dataFFT = squeeze(fftData{arraySide}(attCuePos,:,:));
-                    dataFFTPSD = squeeze(fftPSData{arraySide}(attCuePos,:,:));
-                    dataMTPSD  = squeeze(mtPSData{arraySide}(attCuePos,:,:));
+                    dataFFT = log10(squeeze(fftData{arraySide}(attCuePos,:,:)));
+                    dataFFTPSD = log10(squeeze(fftPSData{arraySide}(attCuePos,:,:)));
+                    dataMTPSD  = log10(squeeze(mtPSData{arraySide}(attCuePos,:,:)));
                 else
-                    dataFFT = squeeze(fftData{arraySide}(attCuePos,:,:)) - squeeze(fftData{arraySide}(5,:,:));
-                    dataFFTPSD = squeeze(fftPSData{arraySide}(attCuePos,:,:))- squeeze(fftPSData{arraySide}(5,:,:));
-                    dataMTPSD  = squeeze(mtPSData{arraySide}(attCuePos,:,:)) - squeeze(mtPSData{arraySide}(5,:,:));
+                    dataFFT = 10*(log10(squeeze(fftData{arraySide}(attCuePos,:,:))) - log10(squeeze(fftData{arraySide}(5,:,:))));   % difference in dB
+                    dataFFTPSD = 10*(log10(squeeze(fftPSData{arraySide}(attCuePos,:,:)))- log10(squeeze(fftPSData{arraySide}(5,:,:))));
+                    dataMTPSD  = 10*(log10(squeeze(mtPSData{arraySide}(attCuePos,:,:))) - log10(squeeze(mtPSData{arraySide}(5,:,:))));
                 end
                 if strcmp(analysisMethod,'FFT Amplitude')
                     plotData(hFFT(arraySide),freqVals,dataFFT,colorNamesAttCue(attCuePos,:));
@@ -386,18 +397,24 @@ colorNamesSides = 'cmkk';
                 end
             end
             
+            if showAbsoluteValsFlag
+                fact=1;
+            else 
+                fact=10;
+            end
+             
             if strcmp(analysisMethod,'FFT Amplitude')
                 makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
-                makeBarPlot(hBarAlpha(arraySide),alphaData{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
-                makeBarPlot(hBarSSVEP(arraySide),ssvepData{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
+                makeBarPlot(hBarAlpha(arraySide),fact*(log10(alphaData{arraySide})),colorNamesAttCue,showAbsoluteValsFlag);
+                makeBarPlot(hBarGamma(arraySide),fact*(log10(sum(fftData{arraySide}(:,:,gammaPos),3))),colorNamesAttCue,showAbsoluteValsFlag);
             elseif strcmp(analysisMethod,'FFT Power')
                 makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
-                makeBarPlot(hBarAlpha(arraySide),mean(fftPSData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
-                makeBarPlot(hBarSSVEP(arraySide),fftPSData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag); 
+                makeBarPlot(hBarAlpha(arraySide),fact*(log10(sum(fftPSData{arraySide}(:,:,alphaPos),3))),colorNamesAttCue,showAbsoluteValsFlag);
+                makeBarPlot(hBarGamma(arraySide),fact*(log10(sum(fftPSData{arraySide}(:,:,gammaPos),3))),colorNamesAttCue,showAbsoluteValsFlag); 
             elseif strcmp(analysisMethod,'Multi-Taper')
                 makeBarPlot(hBarFR(arraySide),firingRates{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
-                makeBarPlot(hBarAlpha(arraySide),mean(mtPSData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
-                makeBarPlot(hBarSSVEP(arraySide),mtPSData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag); 
+                makeBarPlot(hBarAlpha(arraySide),fact*(log10(sum(mtPSData{arraySide}(:,:,alphaPos),3))),colorNamesAttCue,showAbsoluteValsFlag);
+                makeBarPlot(hBarGamma(arraySide),fact*(log10(sum(mtPSData{arraySide}(:,:,gammaPos),3))),colorNamesAttCue,showAbsoluteValsFlag); 
             end
         end
                
@@ -411,6 +428,7 @@ colorNamesSides = 'cmkk';
                     dataFFC = squeeze(ffcData{arraySide}(attCuePos,:,:));
                     dataSFC = squeeze(sfcData{arraySide}(attCuePos,:,:));
                     dataAmpCorr = squeeze(ampCorrData{arraySide}(attCuePos,:,:));
+                    dataAmpCorrMT = squeeze(ampCorrMTData{arraySide}(attCuePos,:,:));
                     dataffPPC = squeeze(ffppcData{arraySide}(attCuePos,:,:));
                     datasfPPC = squeeze(sfppcData{arraySide}(attCuePos,:,:));
                     
@@ -418,12 +436,17 @@ colorNamesSides = 'cmkk';
                     dataFFC = squeeze(ffcData{arraySide}(attCuePos,:,:)) - squeeze(ffcData{arraySide}(5,:,:));
                     dataSFC = squeeze(sfcData{arraySide}(attCuePos,:,:)) - squeeze(sfcData{arraySide}(5,:,:));
                     dataAmpCorr = squeeze(ampCorrData{arraySide}(attCuePos,:,:)) - squeeze(ampCorrData{arraySide}(5,:,:));
+                    dataAmpCorrMT = squeeze(ampCorrMTData{arraySide}(attCuePos,:,:)) - squeeze(ampCorrMTData{arraySide}(5,:,:));
                     dataffPPC = squeeze(ffppcData{arraySide}(attCuePos,:,:)) - squeeze(ffppcData{arraySide}(5,:,:));
                     datasfPPC = squeeze(sfppcData{arraySide}(attCuePos,:,:)) - squeeze(sfppcData{arraySide}(5,:,:));                    
                 end
                 plotData(hFFC(arraySide),freqValsMT,dataFFC,colorNamesAttCue(attCuePos,:));
                 plotData(hSFC(arraySide),freqValsMT,dataSFC,colorNamesAttCue(attCuePos,:));
-                plotData(hAmpCorr(arraySide),freqVals,dataAmpCorr,colorNamesAttCue(attCuePos,:));
+                if strcmp(analysisMethod,'FFT Amplitude') ||  strcmp(analysisMethod,'FFT Power')
+                    plotData(hAmpCorr(arraySide),freqVals,dataAmpCorr,colorNamesAttCue(attCuePos,:));
+                elseif strcmp(analysisMethod,'Multi-Taper')
+                    plotData(hAmpCorr(arraySide),freqValsMT,dataAmpCorrMT,colorNamesAttCue(attCuePos,:));
+                end
                 plotData(hffPPC(arraySide),freqValsPPC,dataffPPC,colorNamesAttCue(attCuePos,:));
                 plotData(hsfPPC(arraySide),freqValsPPC,datasfPPC,colorNamesAttCue(attCuePos,:));                
                 
@@ -431,11 +454,16 @@ colorNamesSides = 'cmkk';
             
             makeBarPlot(hBarRsc(arraySide),rSCData{arraySide},colorNamesAttCue,showAbsoluteValsFlag);
             makeBarPlot(hBarFFCAlpha(arraySide),mean(ffcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
-            makeBarPlot(hBarFFCSSVEP(arraySide),ffcData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarFFCGamma(arraySide),mean(ffcData{arraySide}(:,:,gammaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
             makeBarPlot(hBarSFCAlpha(arraySide),mean(sfcData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
-            makeBarPlot(hBarSFCSSVEP(arraySide),sfcData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag);
-            makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
-            makeBarPlot(hBarAmpCorrSSVEP(arraySide),ampCorrData{arraySide}(:,:,ssvepPos),colorNamesAttCue,showAbsoluteValsFlag);
+            makeBarPlot(hBarSFCGamma(arraySide),mean(sfcData{arraySide}(:,:,gammaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+            if strcmp(analysisMethod,'FFT Amplitude')  ||  strcmp(analysisMethod,'FFT Power')
+                makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+                makeBarPlot(hBarAmpCorrGamma(arraySide),mean(ampCorrData{arraySide}(:,:,gammaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+            elseif strcmp(analysisMethod,'Multi-Taper')
+                makeBarPlot(hBarAmpCorrAlpha(arraySide),mean(ampCorrMTData{arraySide}(:,:,alphaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+                makeBarPlot(hBarAmpCorrGamma(arraySide),mean(ampCorrMTData{arraySide}(:,:,gammaPos),3),colorNamesAttCue,showAbsoluteValsFlag);
+            end
         end
         
         % Rescale plots and set the x and y scales
@@ -474,7 +502,7 @@ colorNamesSides = 'cmkk';
 
         yLims = getYLims(hBarFR(1:2)); axis(hBarFR(1),[0 6 yLims]);
         yLims = getYLims(hBarAlpha(1:2)); axis(hBarAlpha(1),[0 6 yLims]);
-        yLims = getYLims(hBarSSVEP(1:2)); axis(hBarSSVEP(1),[0 6 yLims]);
+        yLims = getYLims(hBarGamma(1:2)); axis(hBarGamma(1),[0 6 yLims]);
         ylim(hBehavior(1),[0 1]);
         
         if showAbsoluteValsFlag
@@ -484,11 +512,11 @@ colorNamesSides = 'cmkk';
         end
         axis(hBarRsc(1),[0 6 yLims]);
         axis(hBarFFCAlpha(1),[0 6 yLims]);
-        axis(hBarFFCSSVEP(1),[0 6 yLims]);
+        axis(hBarFFCGamma(1),[0 6 yLims]);
         axis(hBarSFCAlpha(1),[0 6 yLims]);
-        axis(hBarSFCSSVEP(1),[0 6 yLims]);
+        axis(hBarSFCGamma(1),[0 6 yLims]);
         axis(hBarAmpCorrAlpha(1),[0 6 yLims]);
-        axis(hBarAmpCorrSSVEP(1),[0 6 yLims]);
+        axis(hBarAmpCorrGamma(1),[0 6 yLims]);
         
         % Labels
         xlabel(hPSTH(3),'Time (s)'); title(hPSTH(1),'Firing Rate (spikes/s)');
@@ -497,7 +525,7 @@ colorNamesSides = 'cmkk';
         
         title(hBarFR(1),'Firing Rate');
         title(hBarAlpha(1),'Alpha');
-        title(hBarSSVEP(1),'SSVEP');
+        title(hBarGamma(1),'Gamma');
         
         xlabel(hFFC(4),'Frequency (Hz)'); title(hFFC(1),'FFC');
         xlabel(hSFC(4),'Frequency (Hz)'); title(hSFC(1),'SFC');
@@ -508,23 +536,27 @@ colorNamesSides = 'cmkk';
         
         title(hBarRsc(1),'r_s_c');
         title(hBarFFCAlpha(1),'FFC_A_l_p_h_a');
-        title(hBarFFCSSVEP(1),'FFC_S_S_V_E_P');
+        title(hBarFFCGamma(1),'FFC_G_a_m_m_a');
         title(hBarSFCAlpha(1),'SFC_A_l_p_h_a');
-        title(hBarSFCSSVEP(1),'SFC_S_S_V_E_P');
+        title(hBarSFCGamma(1),'SFC_G_a_m_m_a');
         title(hBarAmpCorrAlpha(1),'amp_A_l_p_h_a');
-        title(hBarAmpCorrSSVEP(1),'amp_S_S_V_E_P');
+        title(hBarAmpCorrGamma(1),'amp_G_a_m_m_a');
 
         title(hBehavior(1),'Behavior (Fraction Correct)');
         
+        arraySideString=[{'Left'} {'Right'} {'Both'} {'Across'}];
         for arraySide=1:3
-            ylabel(hPSTH(arraySide),['N=' num2str(size(psthData{arraySide},2))],'color',colorNamesSides(arraySide));
+            ylabel(hPSTH(arraySide),{[arraySideString{arraySide} ' Array'];['N=' num2str(size(psthData{arraySide},2))]},'color',colorNamesSides(arraySide));
         end
         
         for arraySide = 1:4
-            ylabel(hFFC(arraySide),['N=' num2str(size(ffcData{arraySide},2))],'color',colorNamesSides(arraySide));
+            ylabel(hFFC(arraySide),[arraySideString{arraySide} ' Array' ' N=' num2str(size(ffcData{arraySide},2))],'color',colorNamesSides(arraySide));
         end
         
         legend(hBehavior(1),'0V','1V','0I','1I','N','location','southeast');
+        legend(hBehavior(2),'Cued','Uncued','Neutral','Location','southeast');
+        legend(hPSTH(1),'H0V','H1V','HN','location','southeast');
+        legend(hPSTH(3),'Att In','Att Out','Neutral','location','southeast');
     end
     function rescaleXY_Callback(~,~)
         tRange = [str2double(get(hStimMin,'String')) str2double(get(hStimMax,'String'))];
@@ -546,7 +578,7 @@ colorNamesSides = 'cmkk';
         holdOnGivenPlotHandle(hFFT,holdOnState);
         holdOnGivenPlotHandle(hBarFR,holdOnState);
         holdOnGivenPlotHandle(hBarAlpha,holdOnState);
-        holdOnGivenPlotHandle(hBarSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBarGamma,holdOnState);
         holdOnGivenPlotHandle(hBehavior,holdOnState);
         
         holdOnGivenPlotHandle(hFFC,holdOnState);
@@ -556,11 +588,11 @@ colorNamesSides = 'cmkk';
         holdOnGivenPlotHandle(hAmpCorr,holdOnState);
         holdOnGivenPlotHandle(hBarRsc,holdOnState);
         holdOnGivenPlotHandle(hBarFFCAlpha,holdOnState);
-        holdOnGivenPlotHandle(hBarFFCSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBarFFCGamma,holdOnState);
         holdOnGivenPlotHandle(hBarSFCAlpha,holdOnState);
-        holdOnGivenPlotHandle(hBarSFCSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBarSFCGamma,holdOnState);
         holdOnGivenPlotHandle(hBarAmpCorrAlpha,holdOnState);
-        holdOnGivenPlotHandle(hBarAmpCorrSSVEP,holdOnState);
+        holdOnGivenPlotHandle(hBarAmpCorrGamma,holdOnState);
         
         if holdOnState
             set(hElectrodes,'Nextplot','add');
@@ -594,7 +626,7 @@ colorNamesSides = 'cmkk';
         claGivenPlotHandle(hFFT);
         claGivenPlotHandle(hBarFR);
         claGivenPlotHandle(hBarAlpha);
-        claGivenPlotHandle(hBarSSVEP);
+        claGivenPlotHandle(hBarGamma);
         claGivenPlotHandle(hBehavior);
         
         claGivenPlotHandle(hFFC);
@@ -604,11 +636,11 @@ colorNamesSides = 'cmkk';
         claGivenPlotHandle(hAmpCorr);
         claGivenPlotHandle(hBarRsc);
         claGivenPlotHandle(hBarFFCAlpha);
-        claGivenPlotHandle(hBarFFCSSVEP);
+        claGivenPlotHandle(hBarFFCGamma);
         claGivenPlotHandle(hBarSFCAlpha);
-        claGivenPlotHandle(hBarSFCSSVEP);
+        claGivenPlotHandle(hBarSFCGamma);
         claGivenPlotHandle(hBarAmpCorrAlpha);
-        claGivenPlotHandle(hBarAmpCorrSSVEP);
+        claGivenPlotHandle(hBarAmpCorrGamma);
         
         claGivenPlotHandle(hElectrodes);
         
@@ -622,16 +654,16 @@ colorNamesSides = 'cmkk';
         end
     end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,ampCorrMTData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getData(folderSourceString,fileNameStringTMP,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag)
 
 numDatasets = length(fileNameStringTMP);
 disp(['Working on dataset 1 of ' num2str(numDatasets)]);
-[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag); % First session
+[psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,ampCorrMTData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getDataSingleSession(folderSourceString,fileNameStringTMP{1},neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag); % First session
 
 if length(fileNameStringTMP)>1
     for i=2:numDatasets
         disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameStringTMP))]);
-        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,fftPSDataTMP,mtPSDataTMP,ampCorrDataTMP,rSCDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,ffppcDataTMP,sfppcDataTMP,freqValsPPCTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP,stimRepsSelectedTMP,stimRepsDiscardedTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag);
+        [psthDataTMP,xsFRTMP,firingRatesTMP,erpDataTMP,timeValsTMP,fftDataTMP,freqValsTMP,alphaDataTMP,ssvepDataTMP,fftPSDataTMP,mtPSDataTMP,ampCorrDataTMP,ampCorrMTDataTMP,rSCDataTMP,ffcDataTMP,ffPhiDataTMP,sfcDataTMP,sfPhiDataTMP,freqValsMTTMP,ffppcDataTMP,sfppcDataTMP,freqValsPPCTMP,electrodeArrayTMP,perCorrectTMP,uniqueOrientationChangeDegTMP,stimRepsSelectedTMP,stimRepsDiscardedTMP] = getDataSingleSession(folderSourceString,fileNameStringTMP{i},neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag);
         
         perCorrect = perCorrect + perCorrectTMP;
         uniqueOrientationChangeDeg = uniqueOrientationChangeDeg + uniqueOrientationChangeDegTMP;
@@ -678,13 +710,13 @@ if length(fileNameStringTMP)>1
                 ffPhiData{k} = cat(2,ffPhiData{k},ffPhiDataTMP{k});
                 sfcData{k} = cat(2,sfcData{k},sfcDataTMP{k});
                 sfPhiData{k} = cat(2,sfPhiData{k},sfPhiDataTMP{k});
-                
+                ampCorrMTData{k}= cat(2,ampCorrMTData{k},ampCorrMTDataTMP{k});
             else
                 error('freqValsMT do not match')
             end
             
             if isequal(freqVals,freqValsTMP)
-                ampCorrData{k} = cat(2,ampCorrData{k},ampCorrDataTMP{k});
+                ampCorrData{k} = cat(2,ampCorrData{k},ampCorrDataTMP{k});  
             else
                 error('freqVals do not match');
             end
@@ -703,7 +735,7 @@ if length(fileNameStringTMP)>1
     uniqueOrientationChangeDeg = uniqueOrientationChangeDeg/numDatasets;
 end
 end
-function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag)
+function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,ssvepData,fftPSData,mtPSData,ampCorrData,ampCorrMTData,rSCData,ffcData,ffPhiData,sfcData,sfPhiData,freqValsMT,ffppcData,sfppcData,freqValsPPC,electrodeArray,perCorrect,uniqueOrientationChangeDeg,stimRepsSelected,stimRepsDiscarded] = getDataSingleSession(folderSourceString,fileNameString,neuronType,populationType,tStr,oStr,tpStr,tapers,analyzeEqualStimRepeatsFlag)
 
 folderSave = fullfile(folderSourceString,'Data','savedData');
 makeDirectory(folderSave);
@@ -795,7 +827,7 @@ else
     for i=1:2 % Each array side
         eList = electrodeArray{i};
         ePairList = electrodepairsWithinHemisphere{i};
-        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP fftPSDTMP mtPSDTMP ampCorrTMP rSCTMP
+        clear psthDataTMP firingRatesTMP erpDataTMP fftDataTMP alphaDataTMP ssvepDataTMP fftPSDTMP mtPSDTMP ampCorrTMP ampCorrMTTMP rSCTMP
         clear ffcTMP ffPhiTMP sfcTMP sfPhiTMP ffppcTMP sfppcTMP
         
         for j=1:numConditions
@@ -811,8 +843,8 @@ else
             erpDataTMP(j,:,:) = squeeze(mean(lfpData{j}.segmentedLFPData(eList,:,:),2));
             
             % FFT
-            fftDataTMP(j,:,:) = log10(squeeze(mean(abs(fft(lfpData{j}.segmentedLFPData(eList,:,pos),[],3)),2)));
-            fftPSDTMP(j,:,:) =  10*log10(squeeze(mean(((abs(fft(lfpData{j}.segmentedLFPData(eList,:,pos),[],3))./Fs).^2),2)));
+            fftDataTMP(j,:,:) =squeeze(mean(abs(fft(lfpData{j}.segmentedLFPData(eList,:,pos),[],3)),2));
+            fftPSDTMP(j,:,:) = squeeze(mean(((abs(fft(lfpData{j}.segmentedLFPData(eList,:,pos),[],3))).^2),2));
             alphaDataTMP(j,:) = sum(fftDataTMP(j,:,alphaPos),3);
             ssvepDataTMP(j,:) = fftDataTMP(j,:,ssvepPos); %#ok<FNDSB>
             
@@ -820,7 +852,7 @@ else
             [mtPSDTMP(j,:,:),~] =  getPSDdata(lfpData{j}.segmentedLFPData(:,:,pos),eList,tapers,lfpData{j}.timeVals(pos));
             
             % Amplitude Correlation
-            ampCorrTMP(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),ePairList);
+            [ampCorrTMP(j,:,:),ampCorrMTTMP(j,:,:)] = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),ePairList,tapers,timeVals);
             
             % Spike-count Correlation (rSC)
             rSCTMP(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,ePairList,timeRange);
@@ -842,6 +874,7 @@ else
         fftPSData{i} = fftPSDTMP;
         mtPSData{i} = mtPSDTMP;
         ampCorrData{i} = ampCorrTMP;
+        ampCorrMTData{i} = ampCorrMTTMP; 
         rSCData{i} = rSCTMP;
         
         ffcData{i} = ffcTMP;
@@ -864,6 +897,7 @@ else
     fftPSData{combinedDataPos} = combineDataAcrossBothArrays(fftPSData);
     mtPSData{combinedDataPos} = combineDataAcrossBothArrays(mtPSData);
     ampCorrData{combinedDataPos} = combineDataAcrossBothArrays(ampCorrData);
+    ampCorrMTData{combinedDataPos} = combineDataAcrossBothArrays(ampCorrMTData);
     rSCData{combinedDataPos} = combineDataAcrossBothArrays(rSCData);
     
     ffcData{combinedDataPos} = combineDataAcrossBothArrays(ffcData);
@@ -878,7 +912,7 @@ else
     disp('Working on amplitude correlation Data, rSC Data and Coherency Data for electrode pairs across hemispheres')
     for j = 1:numConditions
         % Amplitude Correlation analysis across Hemispheres
-        ampCorrData_AH(j,:,:) = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),electrodePairsAcrossHemispheres);
+        [ampCorrData_AH(j,:,:),ampCorrMTData_AH(j,:,:)] = getAmplitudeCorrelation(lfpData{j}.segmentedLFPData(:,:,pos),electrodePairsAcrossHemispheres,tapers,timeVals);
         % rSC Analysis Across Hemispheres
         rSCData_AH(j,:) = getSpikeCountCorrelation(spikeData{j}.segmentedSpikeData,electrodePairsAcrossHemispheres,timeRange);
         % Coherency and Spike-LFP Phase Analysis Across Hemispheres(FFC,SFC,sfPhi)
@@ -896,15 +930,16 @@ else
     sfPhiData{InterHemisphericCoherencyPos} = sfPhiData_AH;
     rSCData{InterHemisphericCoherencyPos} = rSCData_AH;
     ampCorrData{InterHemisphericCoherencyPos} = ampCorrData_AH;
+    ampCorrMTData{InterHemisphericCoherencyPos} = ampCorrMTData_AH;
     ffppcData{InterHemisphericCoherencyPos} = ffppcData_AH;
     sfppcData{InterHemisphericCoherencyPos} = sfppcData_AH;
     
     % Save data
     if analyzeEqualStimRepeatsFlag
-        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsDiscarded');
+        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','ampCorrMTData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsDiscarded');
         save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
     else
-        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsDiscarded');
+        save(fileToSave,'psthData','xsFR','firingRates','erpData','timeVals','fftData','freqVals','alphaData','ssvepData','fftPSData','mtPSData','freqValsMT','ampCorrData','ampCorrMTData','rSCData','electrodeArray','perCorrect','uniqueOrientationChangeDeg','stimRepsSelected','stimRepsDiscarded');
         save(coherencyFileToSave,'ffcData','ffPhiData','sfcData','sfPhiData','freqValsMT','ffppcData','sfppcData','freqValsPPC');
     end
 end
@@ -1035,10 +1070,10 @@ disp('Working on PSD data by MT')
 % Computing Power-spectral density by MT method
 for i=1:size(electrodeList)
     clear data
-    data = (squeeze(lfpData(electrodeList(i),:,:)))';
+    data = squeeze(lfpData(electrodeList(i),:,:))';
     [psd(i,:),freqValsMT]=mtspectrumc(data,params);
 end
-psd = 10*log10(psd);
+%psd = log10(psd);
 end
 function [ffc,ffPhi,sfc,sfPhi,freqValsMT] = getCoherencyMeasures(lfpData,spikeData,electrodePair,tapers,timeVals,timeRange)
 
@@ -1151,16 +1186,34 @@ else
 end
 
 end
-function ampCorr = getAmplitudeCorrelation(lfpData,electrodePair)
+function [ampCorr,ampCorrMT] = getAmplitudeCorrelation(lfpData,electrodePair,tapers,timeVals)
 disp('Working on amplitude Correlation Data')
 fftDataTrialWise = abs(fft(lfpData,[],3));
+% Set up MT
+Fs              = round(1/(timeVals(2)-timeVals(1)));
+params.tapers   = tapers;
+params.pad      = -1;
+params.Fs       = Fs;
+params.fpass    = [0 100];
+params.trialave = 0;
+
+
+for i=1:size(lfpData,1)
+    power(i,:,:)=mtspectrumc(squeeze(lfpData(i,:,:))',params);
+end
+mtPower=permute(power,[1 3 2]);
+mtAmp=sqrt(mtPower);
+
 for k = 1:size(electrodePair,1)
-    clear fft1 fft2
+    clear fft1 fft2 mt1 mt2
 %    disp(['AmpCorrData,electrodePair:',num2str(k)])
 %    disp(['Amplitude Correlation ElectrodePair:',num2str(k)])
     fft1 = squeeze(fftDataTrialWise(electrodePair(k,1),:,:));
     fft2 = squeeze(fftDataTrialWise(electrodePair(k,2),:,:));
+    mt1 = squeeze(mtAmp(electrodePair(k,1),:,:));
+    mt2 = squeeze(mtAmp(electrodePair(k,2),:,:));
     ampCorr(k,:) = diag(corr(fft1,fft2))';
+    ampCorrMT(k,:) =diag(corr(mt1,mt2))';
 end
 end
 function rSC = getSpikeCountCorrelation(spikeData,electrodePair,tRangeS) % Computes for all Electrode pairs
@@ -1195,7 +1248,6 @@ function yLims = getYLims(plotHandles)
 % Initialize
 yMin = inf;
 yMax = -inf;
-
 for row=1:numRows
     for column=1:numCols
         % get positions
