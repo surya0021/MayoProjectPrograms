@@ -544,7 +544,7 @@ colorNamesSides = 'cmkk';
 
         title(hBehavior(1),'Behavior (Fraction Correct)');
         
-        arraySideString=[{'Left'} {'Right'} {'Both'} {'Across'}];
+        arraySideString=[{'Right'} {'Left'} {'Both'} {'Across'}];
         for arraySide=1:3
             ylabel(hPSTH(arraySide),{[arraySideString{arraySide} ' Array'];['N=' num2str(size(psthData{arraySide},2))]},'color',colorNamesSides(arraySide));
         end
