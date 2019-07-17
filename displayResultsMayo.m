@@ -356,9 +356,9 @@ colorNamesSides = 'cmkk';
             end
         end
         
-        alphaRangeHz = [8 12]; ssvepFreqHz = 20; gammaRangeHz = [40 80]; lineNoiseFreqHz= 60;
+        alphaRangeHz = [8 12]; gammaRangeHz = [40 80]; lineNoiseFreqHz= 60; % ssvepFreqHz = 20;
         alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
-        ssvepPos = find(freqVals==ssvepFreqHz);
+%       ssvepPos = find(freqVals==ssvepFreqHz);
         lineNoisePos = find(freqVals==lineNoiseFreqHz);
         gammaPos = setdiff(intersect(find(freqVals>=gammaRangeHz(1)),find(freqVals<=gammaRangeHz(2))),lineNoisePos);
         
