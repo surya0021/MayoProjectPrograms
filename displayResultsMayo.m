@@ -326,7 +326,7 @@ colorNamesSides = 'cmkk';
         showAbsoluteValsFlag = get(hShowAbsoluteVals,'val');
         
         % Show electrodes
-        if strcmp(SessionIDString{1},'all (N=24)')
+        if strncmp(SessionIDString{1},'all',3)
             hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
         else
             electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];

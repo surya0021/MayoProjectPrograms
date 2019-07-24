@@ -20,7 +20,7 @@
 
 function saveSegmentedDataMayo(fileNameString,folderSourceString,instructionTrialFlag)
 
-if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';       end
+if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';     end
 if ~exist('instructionTrialFlag','var');    instructionTrialFlag=0;     end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Fixed parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%

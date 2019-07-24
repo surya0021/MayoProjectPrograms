@@ -80,7 +80,6 @@ hTolerence=uicontrol('Parent',hAnalysisPanel,'Units','normalized','Position',[0.
 hNeutralTrials=uicontrol('Parent',hAnalysisPanel,'Unit','Normalized','Position',[0 1-4*analysisHeight 1 analysisHeight],...
     'Style','togglebutton','String','Divide Neutral Trials depending on Target Location','fontSize',fontSizeSmall,'Callback',@plotHandle_Callback);
 
-    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%% plot options %%%%%%%%%%%%%%%%%
@@ -105,7 +104,6 @@ hPSD=getPlotHandles(3,3,[0.05 0.05 0.4 0.9],0.01,0.1);
 hPSTH=getPlotHandles(3,3,[0.5 0.05 0.48 0.9],0.01,0.1);
 
     
-
     function plotData_Callback(~,~)
         
         s=get(hSessions,'val'); fileNameString = fileNameStringListArray{s} ; SessionIDString = fileNameStringListAll{s};
