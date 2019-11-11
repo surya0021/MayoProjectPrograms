@@ -2,7 +2,7 @@ function [fileNameStringList,monkeyNameList] = getAttentionExperimentDetails
 
 % Arturo
 monkeyNameList{1} = 'arturo';
-sessionNumberList{1} = [53:63 73:75]; % 54 and 59 added now
+sessionNumberList{1} = [53 55:63 73:75]; % 54 is discarded because of very few H1V and HOI trials %
 
 % Wiggin
 monkeyNameList{2} = 'wiggin';
