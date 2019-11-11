@@ -2,10 +2,11 @@
 
 oriChangeList = [2 3];
 tpStr = '_TargetOnset'; timePeriod = [-0.5 0];
-tapers = [1 1];
+tapers = [2 3];
 alphaRangeHz = [8 12]; gammaRangeHz = [42 78]; lineNoiseFreqHz= 60;
         
-folderSourceString = 'C:\Users\Supratim Ray\OneDrive - Indian Institute of Science\Supratim\Projects\Surya_MayoProject';
+% folderSourceString = 'C:\Users\Supratim Ray\OneDrive - Indian Institute of Science\Supratim\Projects\Surya_MayoProject';
+folderSourceString = 'E:\Mayo';
 
 folderNameSave = fullfile(folderSourceString,'Data','savedDataSummary');
 makeDirectory(folderNameSave);
@@ -28,7 +29,7 @@ typeList = [{'H0V'} {'H1V'} {'H0I'} {'H1I'} {'M0V'} {'M1V'} {'M0I'} {'M1I'} {'H0
 count=1;
 numConditions=length(typeList);
 numOrientations=6;
-numSessions=26;
+numSessions=25;     % pacu 54 is discarded
 numElectrodes=96;
 
 spikeData = cell(numSessions,numConditions,numElectrodes);
