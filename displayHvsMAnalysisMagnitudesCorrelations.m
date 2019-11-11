@@ -1,19 +1,19 @@
 % dataTypeNum - 1: spikes, 2: gamma, 3: alpha
 % processType - 1: raw, 2: z-score
 
-function displayHvsMAnalysisMagnitudesCorrelations(dataTypeNum,processType,trialCutoff)
+function [mData,mCombinedData,rData,rCombinedData,typeList1,typeList2,nSessions] = displayHvsMAnalysisMagnitudesCorrelations(dataTypeNum,processType,trialCutoff)
 
 if ~exist('processType','var');         processType=2;                  end
 if ~exist('trialCutoff','var');         trialCutoff=15;                 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Get Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 oriChangeList = [2 3]; tpStr = '_TargetOnset'; timePeriod = [-0.5 0]; populationType = 'Stimulated';
-tapers = [1 1]; alphaRangeHz = [8 12]; gammaRangeHz = [42 78];
+tapers = [2 3]; alphaRangeHz = [8 12]; gammaRangeHz = [42 78];
 
-folderSourceString = 'C:\Users\Supratim Ray\OneDrive - Indian Institute of Science\Supratim\Projects\Surya_MayoProject';
-%folderSourceString = '/Users/supratimray/Desktop/Surya_MayoProject';
+% folderSourceString = 'C:\Users\Supratim Ray\OneDrive - Indian Institute of Science\Supratim\Projects\Surya_MayoProject';
+folderSourceString = 'E:\Mayo';
 
-folderNameSave = fullfile(folderSourceString,'Data','savedDataSummary');
+folderName = fullfile(folderSourceString,'Data','savedDataSummary');
 fileNameStr = 'dataOri_';
 for i=1:length(oriChangeList)
     fileNameStr = cat(2,fileNameStr,num2str(oriChangeList(i)));
@@ -23,11 +23,11 @@ fileNameStr = cat(2,fileNameStr,tpStr,num2str(timePeriod(1)),'_',num2str(timePer
     '_tapers', num2str(tapers(1)),num2str(tapers(2)),'_alpha',num2str(alphaRangeHz(1)),'_',num2str(alphaRangeHz(2)),...
     '_gamma',num2str(gammaRangeHz(1)),'_',num2str(gammaRangeHz(2)));
 
-fileNameSave = fullfile(folderNameSave,[fileNameStr '.mat']);
-load(fileNameSave);
+fileName = fullfile(folderName,[fileNameStr '.mat']);
+load(fileName);
 
-fileNameSaveElectrodes = fullfile(folderNameSave,['electrodeArrayList' populationType '.mat']);
-load(fileNameSaveElectrodes);
+fileNameElectrodes = fullfile(folderName,['electrodeArrayList' populationType '.mat']);
+load(fileNameElectrodes);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 typeList1 = [{'H0V'} {'H1V'} {'H0I'} {'H1I'} {'M0V'} {'M1V'} {'M0I'} {'M1I'} {'H0N'} {'H1N'} {'M0N'} {'M1N'}];
@@ -54,28 +54,29 @@ nSessions = zeros(1,numConditions);
 
 for c=1:numConditions
     for s=1:numSessions
-  
-        tmp1 = cell2mat(squeeze(dataTMP(s,c,electrodeArrayList{s}{1}))); %#ok<*USENS>
-        tmp2 = cell2mat(squeeze(dataTMP(s,c,electrodeArrayList{s}{2})));
+            tmp1 = cell2mat(squeeze(dataTMP(s,c,electrodeArrayList{s}{1}))); %#ok<*USENS>
+            tmp2 = cell2mat(squeeze(dataTMP(s,c,electrodeArrayList{s}{2})));
+        
         nTrials(s,c) = size(tmp1,2);
         
         if nTrials(s,c)>trialCutoff
             nSessions(c) = nSessions(c)+1;
             
             % Magnitude
+            
             mData{c,1} = cat(1,mData{c,1},mean(tmp1,2));
             mData{c,2} = cat(1,mData{c,2},mean(tmp2,2));
             
             % Correlations
             allCorrs = corrcoef([tmp1' tmp2']);
-            n1=size(tmp1,1);n2=size(tmp2,1);
+            n1=size(tmp1,1); n2=size(tmp2,1);
             corr1 = allCorrs(1:n1,1:n1);
             corr2 = allCorrs(n1+(1:n2),n1+(1:n2));
             corr3 = allCorrs(n1+(1:n2),1:n1);
             
-            corr1All = corr1(:); corr1All(corr1All==1)=[];
+            corr1All =corr1(abs(triu(corr1))>0 & abs(triu(corr1))<1);
             rData{c,1} = cat(1,rData{c,1},corr1All);
-            corr2All = corr2(:); corr2All(corr2All==1)=[];
+            corr2All =corr2(abs(triu(corr2))>0 & abs(triu(corr2))<1);
             rData{c,2} = cat(1,rData{c,2},corr2All);
             rData{c,3} = cat(1,rData{c,3},corr3(:));
         else
@@ -174,7 +175,7 @@ elseif processType==2 % z-score
             x = squeeze(data(s,:,e));
             
             allX=[];
-            for c=1:2 % H0V and H1V
+            for c=2:2 % H1V
                 allX = cat(2,allX,x{c});
             end
             mX = mean(allX);
