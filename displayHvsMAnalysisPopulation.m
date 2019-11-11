@@ -1,5 +1,6 @@
 % dataTypeNum - 1: spikes, 2: gamma, 3: alpha
-% transformType - 1: simple averaging across sides, 2: LDA-uncorrelated
+% transformType - 1: simple averaging across sides, 2: LDA-uncorrelated,
+% 3: LDA-covariance
 
 function displayHvsMAnalysisPopulation(dataTypeNum,transformType,trialCutoff,normalizeFlag)
 
@@ -9,9 +10,10 @@ if ~exist('normalizeFlag','var');       normalizeFlag=1;                end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Get Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 oriChangeList = [2 3]; tpStr = '_TargetOnset'; timePeriod = [-0.5 0]; populationType = 'Stimulated';
-tapers = [1 1]; alphaRangeHz = [8 12]; gammaRangeHz = [42 78];
+tapers = [2 3]; alphaRangeHz = [8 12]; gammaRangeHz = [42 78];
 
-folderSourceString = 'C:\Users\Supratim Ray\OneDrive - Indian Institute of Science\Supratim\Projects\Surya_MayoProject';
+% folderSourceString = 'C:\Users\Supratim Ray\OneDrive - Indian Institute of Science\Supratim\Projects\Surya_MayoProject';
+folderSourceString = 'E:\Mayo';
 folderNameSave = fullfile(folderSourceString,'Data','savedDataSummary');
 fileNameStr = 'dataOri_';
 for i=1:length(oriChangeList)
@@ -97,6 +99,32 @@ for s=1:numSessions
         weightVector = meanDiff./stdData;
         
     elseif transformType==3 % LDA
+        label1 = repmat({'H0V'},size(data1,2),1);
+        label2 = repmat({'H1V'},size(data2,2),1);
+        labelAll = cat(1,label1,label2);
+        dataAll = cat(2,data1,data2);
+        classes=unique(labelAll);
+        numClass=length(classes);
+
+        % LDA using fitcdiscr function of MATLAB
+  
+        Mdl = fitcdiscr(dataAll',labelAll);
+        Mu1 = Mdl.Mu(1,:)';
+        Mu2 = Mdl.Mu(2,:)';
+        SW = Mdl.Sigma;
+        if isrow(SW) && size(data,1)>1    % For gamma=1 case SW is a row matrix (diag(s.^2))
+            SW=bsxfun(@times,SW,eye(length(SW))); % converts into a diagonal matrix
+        end
+        
+        SB = (Mu1-Mu2)*(Mu1-Mu2)'; % between class scatter
+        if det(SW)==0
+            error('Within scatter matrix is non-invertible')
+        end
+        if rank(SB)~=1
+            error('The rank of SB is more than 1')
+        end
+        invSW = inv(SW);
+        weightVector = invSW*(Mu1-Mu2)/norm(invSW*(Mu1-Mu2));
     end
      
     for c=1:numConditions
@@ -111,8 +139,10 @@ function newData = normalizeData(data)
 newData=cell(numSessions,numConditions);
 
 for s=1:numSessions 
-    mX = mean(data{s,2});
-    stdX = sqrt((var(data{s,1}) + var(data{s,2}))/2);
+    mX = mean(data{s,2});   % Normalized w.r.t H1V condition
+%   stdX = sqrt((var(data{s,1}) + var(data{s,2}))/2);
+    stdX= std(data{s,2});
+
         
     for c=1:numConditions
         newData{s,c} = (data{s,c}-mX)/stdX;
