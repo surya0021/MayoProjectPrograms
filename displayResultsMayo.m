@@ -740,11 +740,11 @@ function [psthData,xsFR,firingRates,erpData,timeVals,fftData,freqVals,alphaData,
 folderSave = fullfile(folderSourceString,'Data','savedData');
 makeDirectory(folderSave);
 if analyzeEqualStimRepeatsFlag
-    fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_EqualStimReps.mat']);
-    coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(1)) '_EqualStimReps.mat']);    
+    fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_tapers_',num2str(tapers(2)) '_EqualStimReps.mat']);
+    coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(2)) '_EqualStimReps.mat']);    
 else
-    fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '.mat']);
-    coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(1)) '.mat']);
+    fileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_tapers_',num2str(tapers(2)) '.mat']);
+    coherencyFileToSave = fullfile(folderSave,[fileNameString neuronType populationType tStr oStr tpStr '_coherenceData_tapers_',num2str(tapers(2)) '.mat']);
 end
 
 if exist(fileToSave,'file')&& exist(coherencyFileToSave,'file')
@@ -788,9 +788,9 @@ else
     
     [perCorrect,uniqueOrientationChangeDeg,goodIndexList,orientationChangeDeg] = getBehavior(fileNameString,folderSourceString);
     if strcmp(tStr,'H')
-        goodList = [goodIndexList(1:4) goodIndexList(9)]; % Hit conditions for 0V, 1V, 0I, 1I and M
+        goodList = [goodIndexList(1:4) goodIndexList(9)]; % Hit conditions for 0V, 1V, 0I, 1I and N
     else
-        goodList = [goodIndexList(5:8) goodIndexList(10)]; % Miss conditions for 0V, 1V, 0I, 1I and M
+        goodList = [goodIndexList(5:8) goodIndexList(10)]; % Miss conditions for 0V, 1V, 0I, 1I and N
     end
     
     for i=1:numConditions
