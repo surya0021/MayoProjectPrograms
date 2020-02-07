@@ -1,30 +1,18 @@
-% This program takes the fileNameString and saves the segmented data in
-% appropriate folders
+%This function saves the neutral trials which are divided further depending
+%on target location
+%Here the format is {trialOutcome}{targetLocation}{cueType} used instead of
+%previous format {trialOutcome}{cueLocation}{cueType} c.f.
+%savesegmentedDataMayo.m
+%{trialOutcome}= Hit(H) or Miss(M);  {targetLocation}= Left(0) or Right(1);
+%{cueType}= Neutral(N)
 
-% fileNameString: string indicating the fileName.
-% We assume that the following files are available at
-% folderSourceString\Data\extractedData
-% 1. fileNameString_Codes
-% 2. fileNameString_DAT
-% 3. fileNameString_extractedTrialsLFP
+function saveSegmentedNeutralDataMayo(fileNameString,folderSourceString)
 
-% Followng Patrick's nomenclature, we save data in the format
-% {trialOutcome}{CueType}{CueLocation}.
-% {trialOutcome}: Hit (H) or Miss (M)
-% {CueType}: Valid (V), Invalid (I) or Neutral (N)
-% {CueLocation}: In case the CueType is Valid or Invalid, we also have the
-% cue location (0: left or 1: right).
-% So there are the following 10 file types: H0V,H1V,H0I,H1I,M0V,M1V,M0I,M1I,HN,MN
-
-% Further, we save data around two events of interest: first stimulus and the target.
-
-function saveSegmentedDataMayo(fileNameString,folderSourceString,instructionTrialFlag)
-
-if ~exist('folderSourceString','var');   folderSourceString='C:\Supratim\Projects\MayoProject\';     end
-if ~exist('instructionTrialFlag','var');    instructionTrialFlag=0;     end
+if ~exist('folderSourceString','var');   folderSourceString='E:\Mayo';       end
+neutralTrialFlag=1;     
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Fixed parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%
-saveStringConditionList = [{'H0V'} {'H1V'} {'H0I'} {'H1I'} {'M0V'} {'M1V'} {'M0I'} {'M1I'} {'HN'} {'MN'}]; % Data must be stored in this order
+saveStringConditionList = [{'H0N'} {'H1N'} {'M0N'} {'M1N'}]; % Data must be stored in this order
 Fs = 2000;
 timePeriodS{1} = [-0.25 0.5]; % Save this interval around the first stimulus onset 
 timePeriodS{2} = [-0.5 0.1]; % Save this interval around the target onset
@@ -60,7 +48,7 @@ spikeData = spikeData.(fileNameSpikes); % dimension: trials x channels (each cel
 display([fileNameSpikes ' file loaded.....']);
 
 %%%%%%%%%%%%%%%%%%%%%%%% Find appropriate indices %%%%%%%%%%%%%%%%%%%%%%%%%
-goodIndexList = getGoodIndices(CDS,DAT,instructionTrialFlag); % Get Indices for the 10 categories
+goodIndexList = getGoodIndices(CDS,DAT,[],neutralTrialFlag); % Gets Indices for the 12 categories
 trialStartTimeS = cell2mat(cellfun(@(x) x{1}, CDS(:,1),'UniformOutput',false ));
 stimulusOnTimeS = cellfun(@(x) x{5}, CDS(:,1),'UniformOutput',false); % still under cell format. dimension: trials x 1 (in the first and only columnm there are cells containing all the trial start times for the corresponding trial
 %saccadeTimeS = cell2mat(cellfun(@(x) x{7}, CDS(:,1),'UniformOutput',false));
@@ -74,25 +62,21 @@ for i=1:numTimeSegments
     numTimePos(i) = round(Fs*diff(timePeriodS{i}));
 end
 
-for i=1:length(goodIndexList) % For each of the 10 conditions
+for i=1:length(saveStringConditionList)
     disp(['Working on condition ' saveStringConditionList{i}]);
     
     for j=1:numTimeSegments % For each of the time periods
         clear segmentedLFPData segmentedSpikeData
-    
-        if ~instructionTrialFlag
-            fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP']);
-            fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes']);
-        else
-            fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP_Instruct']);
-            fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes_Instruct']);
-        end
-        numTrials = length(goodIndexList{i});
+                
+        fileNameSaveLFP = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_LFP']);
+        fileNameSaveSpikes = fullfile(folderNameOut,[fileNameString saveStringConditionList{i} saveStringTimePeriodList{j} '_Spikes']);
+        
+        numTrials = length(goodIndexList{8+i});  % GoodIndexList for Neutral Trials starts from the 9th cell 9:H0N , 10:H1N , 11:M0N, 12:M1N
         segmentedLFPData = zeros(numElectrodes,numTrials,numTimePos(j));
         segmentedSpikeData = cell(numElectrodes,numTrials);
         
         for k=1:numTrials
-            t=goodIndexList{i}(k); % Trial Number of interest
+            t=goodIndexList{8+i}(k); % Trial Number of interest
  
             if j==1
                 startPosLFP = round(Fs*(stimulusOnTimeS{t}(1)-trialStartTimeS(t) + timePeriodS{j}(1)));

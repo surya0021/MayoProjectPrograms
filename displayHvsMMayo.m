@@ -17,7 +17,7 @@ hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 hParameterPanel=uipanel('Title','Parameters','FontSize',fontSizeLarge,'Position',[0.3 panelStartHeight 0.2 panelHeight]);
-paramsHeight=1/3;
+paramsHeight=1/4;
 
 %fileNameString
 [fileNameStringAll,fileNameStringListAll,fileNameStringListArray] = getFileNameStringList;
@@ -33,11 +33,20 @@ uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0 1-2*paramsH
 hPopulationType=uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0.5 1-2*paramsHeight 0.5 paramsHeight],...
     'Style','popupmenu','String',populationString,'fontSize',fontSizeSmall,'BackgroundColor',backgroundColor);
 
+
+%orientationChange
+oriChangeString=[{'Single'} {'Selected'}];
+uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0 1-3*paramsHeight 0.5 paramsHeight],...
+    'Style','text','String','Orientation','FontSize',fontSizeSmall);
+hOrientation=uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0.5 1-3*paramsHeight 0.5 paramsHeight],...
+    'Style','popupmenu','String',oriChangeString,'fontSize',fontSizeSmall,'BackgroundColor',backgroundColor,'Callback',@enableDisable_Callback);
+
+
 % Analysis Interval
 analysisIntervalString = [{'Baseline'} {'StimOnset'} {'TargetOnset_250ms'} {'TargetOnset_500ms'}];
-uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0 1-3*paramsHeight 0.5 paramsHeight],...
+uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0 1-4*paramsHeight 0.5 paramsHeight],...
     'Style','text','String','Time Period','FontSize',fontSizeSmall);
-hTimePeriodType=uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0.5 1-3*paramsHeight 0.5 paramsHeight],...
+hTimePeriodType=uicontrol('Parent',hParameterPanel,'Unit','Normalized','Position',[0.5 1-4*paramsHeight 0.5 paramsHeight],...
     'Style','popupmenu','String',analysisIntervalString,'fontSize',fontSizeSmall,'BackgroundColor',backgroundColor);
 
 
@@ -68,9 +77,8 @@ uicontrol('Parent',hAnalysisPanel,'Units','normalized','Position',[0.7 1-3*analy
     'Style','text','String','+/-','FontSize',fontSizeMedium);
 hTolerence=uicontrol('Parent',hAnalysisPanel,'Units','normalized','Position',[0.8 1-3*analysisHeight 0.15 analysisHeight],...
     'Style','edit','String',num2str(performInterval(2)),'FontSize',fontSizeSmall);
-hLDA=uicontrol('Parent',hAnalysisPanel,'Units','normalized','Position',[0 1-4*analysisHeight 1 analysisHeight],...
-    'Style','togglebutton','String','Linear Discriminant Analysis','FontSize',fontSizeMedium);
-
+hNeutralTrials=uicontrol('Parent',hAnalysisPanel,'Unit','Normalized','Position',[0 1-4*analysisHeight 1 analysisHeight],...
+    'Style','togglebutton','String','Divide Neutral Trials depending on Target Location','fontSize',fontSizeSmall,'Callback',@plotHandle_Callback);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,26 +86,34 @@ hLDA=uicontrol('Parent',hAnalysisPanel,'Units','normalized','Position',[0 1-4*an
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hPlotPanel=uipanel('Title','Plotting Options','FontSize',fontSizeLarge,'Position',[0.75 panelStartHeight 0.2 panelHeight]);
 
-uicontrol('Parent',hPlotPanel,'Unit','Normalized','Position',[0 0.5 1 0.2],...
-    'Style','pushbutton','String','Plot/Get Data(LDA)','fontSize',fontSizeMedium,'Callback',{@plotData_Callback});
-uicontrol('Parent',hPlotPanel,'Unit','Normalized','Position',[0,0.75 1 0.2],...
+uicontrol('Parent',hPlotPanel,'Unit','Normalized','Position',[0.05 0.5 0.2 0.2],...
+    'Style','pushbutton','String','Plot','fontSize',fontSizeMedium,'Callback',{@plotData_Callback});
+uicontrol('Parent',hPlotPanel,'Unit','Normalized','Position',[0.05,0.75 0.2 0.2],...
     'Style','pushbutton','String','Cla','fontSize',fontSizeMedium,'Callback',{@cla_Callback});
+% Figures
+figure(1) % Plots of differences between hits and miss trials
+hDelPSD=getPlotHandles(3,1,[0.05 0.05 0.2 0.7],0.05); linkaxes(hDelPSD);
+hDelPSTH=getPlotHandles(3,1,[0.3 0.05 0.2 0.7],0.05); linkaxes(hDelPSTH);
+hBarDelFR=getPlotHandles(3,1,[0.55 0.05 0.1 0.7],0.05); linkaxes(hBarDelFR);
+hBarDelAlpha=getPlotHandles(3,1,[0.7 0.05 0.1 0.7],0.05); linkaxes(hBarDelAlpha);
+hBarDelGamma=getPlotHandles(3,1,[0.85 0.05 0.1 0.7],0.05); linkaxes(hBarDelGamma);
 
-hPSD=getPlotHandles(3,1,[0.05 0.05 0.2 0.7],0.05); linkaxes(hPSD);
-hPSTH=getPlotHandles(3,1,[0.3 0.05 0.2 0.7],0.05); linkaxes(hPSTH);
-hBarFR=getPlotHandles(3,1,[0.55 0.05 0.1 0.7],0.05); linkaxes(hBarFR);
-hBarAlpha=getPlotHandles(3,1,[0.7 0.05 0.1 0.7],0.05); linkaxes(hBarAlpha);
-hBarGamma=getPlotHandles(3,1,[0.85 0.05 0.1 0.7],0.05); linkaxes(hBarGamma);
+fig2=figure(2); %figure 2 for Plots of Absolute values of Hits and Miss Trials
+set(fig2,'units','normalized','outerposition',[0 0 1 1]); 
+hPSD=getPlotHandles(3,3,[0.05 0.05 0.4 0.9],0.01,0.1);
+hPSTH=getPlotHandles(3,3,[0.5 0.05 0.48 0.9],0.01,0.1);
 
+    
     function plotData_Callback(~,~)
         
         s=get(hSessions,'val'); fileNameString = fileNameStringListArray{s} ; SessionIDString = fileNameStringListAll{s};
         p=get(hPopulationType,'val'); populationType=populationString{p};
         tp=get(hTimePeriodType,'val'); tpStr= analysisIntervalString{tp};
+        o=get(hOrientation,'val');  oStr=oriChangeString{o};
         accu=get(hAccuracy,'String'); accuracy= str2double(accu);
         tol=get(hTolerence,'String'); tolerence= str2double(tol);
         performInterval=[accuracy tolerence];
-        LDAFlag=get(hLDA,'val');
+        neutralFlag=get(hNeutralTrials,'val');
         
         bandwidth = get(hBandwidth,'String'); TW = str2double(bandwidth);
         tapersSet = get(hTapers,'String'); K = str2double(tapersSet);
@@ -108,111 +124,183 @@ hBarGamma=getPlotHandles(3,1,[0.85 0.05 0.1 0.7],0.05); linkaxes(hBarGamma);
         end
         
         % Show electrodes
-        if strcmp(SessionIDString{1},'all (N=24)')
+        if strcmp(SessionIDString{1}(1:3),'all')
             hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,'blank');
         else
             electrodeGridPos = [0.05 panelStartHeight 0.2 panelHeight];
             hElectrodes = showElectrodeLocationsMayo(electrodeGridPos,[],'r',[],0,0,SessionIDString{1});
         end
         
-        [PSDDataHit,PSDDataMiss,FRHit,FRMiss,freqValsMT,electrodeArray]=analyseAllSession(fileNameString,folderSourceString,tpStr,populationType,tapers,performInterval,LDAFlag);
-        if LDAFlag==0
+        [PSDDataHit,PSDDataMiss,psthHit,psthMiss,FRHit,FRMiss,freqVals,xsFR,electrodeArray]=analyseAllSession(fileNameString,folderSourceString,tpStr,oStr,populationType,tapers,performInterval,neutralFlag);
+        if neutralFlag
+            colorNames='bmgc';
+        else
             colorNames='bmg';
-            alphaRangeHz = [8 12]; gammaRangeHz = [40 80]; lineNoiseFreqHz= 60;
-            alphaPos = intersect(find(freqValsMT>=alphaRangeHz(1)),find(freqValsMT<=alphaRangeHz(2)));
-            lineNoisePos = find(freqValsMT==lineNoiseFreqHz);
-            gammaPos = setdiff(intersect(find(freqValsMT>=gammaRangeHz(1)),find(freqValsMT<=gammaRangeHz(2))),lineNoisePos);
-            for i=1:3
-                if s==length(fileNameStringListAll)||i==3
-                else
-                    showElectrodeLocationsMayo([],electrodeArray{i},colorNames(i),hElectrodes,1,0,SessionIDString{1}); % Show electrodes used for analysis
-                end
-                for cue=1:3
-                    clear DataPSD
-                    DataPSD=squeeze(10*(log10(PSDDataHit{i}(cue,:,:))-log10(PSDDataMiss{i}(cue,:,:))));
-                    plotData(hPSD(i),freqValsMT,DataPSD,colorNames(cue));
-                    line([0 100],[0 0],'Color','k','Parent',hPSD(i));
-                end
-                ChangeFR{i}=FRHit{i}-FRMiss{i};
-                alphadB{i}=10*(log10(sum(PSDDataHit{i}(:,:,alphaPos),3))-log10(sum(PSDDataMiss{i}(:,:,alphaPos),3)));
-                gammadB{i}=10*(log10(sum(PSDDataHit{i}(:,:,gammaPos),3))-log10(sum(PSDDataMiss{i}(:,:,gammaPos),3)));
-                getBarPlot(hBarFR(i),ChangeFR{i},colorNames);
-                getBarPlot(hBarAlpha(i),alphadB{i},colorNames);
-                getBarPlot(hBarGamma(i),gammadB{i},colorNames);
+        end
+        alphaRangeHz = [8 12]; gammaRangeHz = [40 80]; lineNoiseFreqHz= 60;
+        alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
+        lineNoisePos = find(freqVals==lineNoiseFreqHz);
+        gammaPos = setdiff(intersect(find(freqVals>=gammaRangeHz(1)),find(freqVals<=gammaRangeHz(2))),lineNoisePos);
+        for i=1:3
+            if s==length(fileNameStringListAll)||i==3
+            else
+                showElectrodeLocationsMayo([],electrodeArray{i},colorNames(i),hElectrodes,1,0,SessionIDString{1}); % Show electrodes used for analysis
             end
-            
-            yLims=getYLims(hPSD); axis(hPSD(1),[0 100 yLims]);
-            yLims=getYLims(hBarFR); axis(hBarFR(1),[0 4 yLims]);
-            yLims=getYLims(hBarAlpha); axis(hBarAlpha(1),[0 4 yLims]);
-            yLims=getYLims(hBarGamma); axis(hBarGamma(1),[0 4 yLims]);
-            
-            %Title
-            title(hPSD(1),'Power Spectra');
-            title(hBarFR(1),'Firing rate');
-            title(hBarAlpha(1),'Alpha');
-            title(hBarGamma(1),'Gamma');
-            
-            %X Label
-            xlabel(hPSD(3),'Frequency (Hz)');
-            
-            %Y Label
-            arraySideString=[{'Right'} {'Left'} {'Both'}];
-            for side=1:2
-                ylabel(hPSD(side),[arraySideString{side} ' array' ' N=' num2str(size(FRHit{side},2))],'Color',colorNames(side));
+            for cue=1:size(PSDDataHit{i},1) 
+                clear DataPSD DataPSTH
+                DataPSD=squeeze(10*(log10(PSDDataHit{i}(cue,:,:))-log10(PSDDataMiss{i}(cue,:,:))));
+                DataPSTH=squeeze(psthHit{i}(cue,:,:)-psthMiss{i}(cue,:,:));
+                plotData(hDelPSD(i),freqVals,DataPSD,colorNames(cue));
+                plotData(hDelPSTH(i),xsFR,DataPSTH,colorNames(cue));
+                line([0 100],[0 0],'Color','k','Parent',hDelPSD(i));
+                line([xsFR(1) xsFR(end)],[0 0],'Color','k','Parent',hDelPSTH(i));
             end
-            
-            ylabel(hPSD(3),{[arraySideString{3} ' array' ' N=' num2str(size(FRHit{3},2))];'Change in Power (dB)'});
-            ylabel(hBarFR(3),'Change in firing rate (spikes/s)');
-            ylabel(hBarAlpha(3),'Change in Power (dB)');
-            ylabel(hBarGamma(3),'Change in Power (dB)');
-            
-            %legend
+            ChangeFR{i}=FRHit{i}-FRMiss{i};
+            alphadB{i}=10*(log10(sum(PSDDataHit{i}(:,:,alphaPos),3))-log10(sum(PSDDataMiss{i}(:,:,alphaPos),3)));
+            gammadB{i}=10*(log10(sum(PSDDataHit{i}(:,:,gammaPos),3))-log10(sum(PSDDataMiss{i}(:,:,gammaPos),3)));
+            getBarPlot(hBarDelFR(i),ChangeFR{i},colorNames);
+            getBarPlot(hBarDelAlpha(i),alphadB{i},colorNames);
+            getBarPlot(hBarDelGamma(i),gammadB{i},colorNames);
+        end
+        
+        for cue=1:size(PSDDataHit{1},1)
+            for side=1:3
+                plotHvsM(hPSD(3*(cue-1)+side),freqVals,log10(squeeze(PSDDataHit{side}(cue,:,:))),log10(squeeze(PSDDataMiss{side}(cue,:,:))));
+                plotHvsM(hPSTH(3*(cue-1)+side),xsFR,squeeze(psthHit{side}(cue,:,:)),squeeze(psthMiss{side}(cue,:,:)));
+            end
+        end
+        yLims=getYLims(hDelPSD); axis(hDelPSD(1),[0 100 yLims]);
+        yLims=getYLims(hBarDelFR); axis(hBarDelFR(1),[0 5 yLims]);
+        yLims=getYLims(hBarDelAlpha); axis(hBarDelAlpha(1),[0 5 yLims]);
+        yLims=getYLims(hBarDelGamma); axis(hBarDelGamma(1),[0 5 yLims]);
+        
+        %Title
+        title(hDelPSD(1),'Power Spectra');
+        title(hBarDelFR(1),'Firing rate');
+        title(hBarDelAlpha(1),'Alpha');
+        title(hBarDelGamma(1),'Gamma');
+        title(hPSD(1),'Valid');
+        title(hPSTH(1),'Valid');
+        title(hPSD(4),'Invalid');
+        title(hPSTH(4),'Invalid');
+        if size(hPSD,2)==3
+            title(hPSD(7),'Neutral');
+            title(hPSTH(7),'Neutral');
+        elseif size(hPSD,2)==4
+            title(hPSD(7),'Neutral(Contra-Change)');
+            title(hPSTH(7),'Neutral(Contra-Change)');
+            title(hPSD(10),'Neutral(Ipsi-Change)');
+            title(hPSTH(10),'Neutral(Ipsi-Change)');
+        end
+        
+        %X Label
+        xlabel(hDelPSD(3),'Frequency (Hz)');
+        xlabel(hDelPSTH(3),'Time(s)');
+        xlabel(hPSD(3),'Frequency (Hz)');
+        xlabel(hPSTH(3),'Time(s)');
+        
+        
+        %Y Label
+        arraySideString=[{'Right'} {'Left'} {'Both'}];
+        for side=1:2
+            ylabel(hDelPSD(side),[arraySideString{side} ' array' ' N=' num2str(size(FRHit{side},2))],'Color',colorNames(side));
+            ylabel(hPSD(side),[arraySideString{side} ' array' ' N=' num2str(size(FRHit{side},2))],'Color',colorNames(side));
+        end
+        
+        ylabel(hDelPSD(3),{[arraySideString{3} ' array' ' N=' num2str(size(FRHit{3},2))];'Change in Power (dB)'});
+        ylabel(hPSD(3),{[arraySideString{3} ' array' ' N=' num2str(size(FRHit{3},2))];'log_{10}(Power)'});
+        ylabel(hBarDelFR(3),'Change in firing rate (spikes/s)');
+        ylabel(hBarDelAlpha(3),'Change in Power (dB)');
+        ylabel(hBarDelGamma(3),'Change in Power (dB)');
+        ylabel(hPSTH(3),'Firing Rate (spikes/s)');
+        
+        %legend
+        if neutralFlag
+            cueString=[{'Cued'} {'Uncued'} {'Neutral(Contra)'} {'Neutral(Ipsi)'}];
+        else
             cueString=[{'Cued'} {'Uncued'} {'Neutral'}];
-            for m=1:3
-                text('Parent',hPSD(1),'Units','normalized','Position',[0.7 0.35-0.1*(m-1)],'String',cueString{m},'FontSize',fontSizeMedium,'Color',colorNames(m));
+        end
+        for m=1:length(cueString)
+            text('Parent',hDelPSD(1),'Units','normalized','Position',[0.7 0.45-0.1*(m-1)],'String',cueString{m},'FontSize',fontSizeSmall,'Color',colorNames(m));
+        end
+        text('Parent',hPSD(1),'Units','normalized','Position',[0.7 0.85],'String','Hit','FontSize',fontSizeMedium,'Color','r');
+        text('Parent',hPSD(1),'Units','normalized','Position',[0.7 0.75],'String','Miss','FontSize',fontSizeMedium,'Color','b');
+        text('Parent',hPSTH(1),'Units','normalized','Position',[0.7 0.85],'String','Hit','FontSize',fontSizeMedium,'Color','r');
+        text('Parent',hPSTH(1),'Units','normalized','Position',[0.7 0.75],'String','Miss','FontSize',fontSizeMedium,'Color','b');
+    end
+    function cla_Callback(~,~)
+        claGivenPlotHandle(hDelPSD);
+        claGivenPlotHandle(hDelPSTH);
+        claGivenPlotHandle(hBarDelFR);
+        claGivenPlotHandle(hBarDelAlpha);
+        claGivenPlotHandle(hBarDelGamma);
+        claGivenPlotHandle(hPSD);
+        claGivenPlotHandle(hPSTH);
+        claGivenPlotHandle(hElectrodes);
+    end
+    function claGivenPlotHandle(plotHandles)
+        [numRows,numCols] = size(plotHandles);
+        for j=1:numRows
+            for k=1:numCols
+                cla(plotHandles(j,k));
             end
         end
     end
-        function cla_Callback(~,~)
-            claGivenPlotHandle(hPSD);
-            claGivenPlotHandle(hBarFR);
-            claGivenPlotHandle(hBarAlpha);
-            claGivenPlotHandle(hBarGamma);
-            claGivenPlotHandle(hElectrodes);
+    function enableDisable_Callback(~,~)
+        if strcmp({'Selected'},oriChangeString(hOrientation.Value));  hAccuracy.Enable='off';   hTolerence.Enable='off';
+        else hAccuracy.Enable='on';  hTolerence.Enable='on';
         end
-        function claGivenPlotHandle(plotHandles)
-            [numRows,numCols] = size(plotHandles);
-            for j=1:numRows
-                for k=1:numCols
-                    cla(plotHandles(j,k));
-                end
-            end
+    end
+
+    function plotHandle_Callback(~,~)
+        if get(hNeutralTrials,'val')==1
+            clf(fig2)
+            set(0,'CurrentFigure',fig2)
+            hPSD=getPlotHandles(3,4,[0.05 0.05 0.4 0.9],0.01,0.1);
+            hPSTH=getPlotHandles(3,4,[0.5 0.05 0.48 0.9],0.01,0.1);
+        else
+           clf(fig2)
+           set(0,'CurrentFigure',fig2) 
+           hPSD=getPlotHandles(3,3,[0.05 0.05 0.4 0.9],0.01,0.1);
+           hPSTH=getPlotHandles(3,3,[0.5 0.05 0.48 0.9],0.01,0.1);
         end
+    end
 end
 
 
-function [PSDDataHit,PSDDataMiss,FRHit,FRMiss,freqValsMT,electrodeArray]=analyseAllSession(fileNameString,folderSourceString,tpStr,populationType,tapers,performInterval,LDAFlag)
+function [PSDDataHit,PSDDataMiss,psthHit,psthMiss,FRHit,FRMiss,freqVals,xsFR,electrodeArray]=analyseAllSession(fileNameString,folderSourceString,tpStr,oStr,populationType,tapers,performInterval,neutralFlag)
 
-disp(['Working on dataset 1 of ' num2str(length(fileNameString))]);
-[~,~,~,~,oriChangeIndex]=getGoodPos(fileNameString{1},folderSourceString,performInterval);
+disp(['Working on dataset 1 of ' num2str(length(fileNameString)) ': ' fileNameString{1}]);
+if strcmp(oStr,'Single')
+    [~,~,~,~,~,oriChangeIndex]=getGoodPos(fileNameString{1},folderSourceString,performInterval,neutralFlag);
+else
+    oriChangeIndex=[];
+end
 if nnz(isnan(oriChangeIndex))~=0
     disp(['Performance in  ' fileNameString{1} 'is out of the interval ' num2str(performInterval(1)) ' +/-' num2str(performInterval(2)) '%']);
 else
-    [PSDDataHit,PSDDataMiss,FRHit,FRMiss,freqValsMT,electrodeArray]=analyseSingleSession(fileNameString{1},folderSourceString,tpStr,populationType,tapers,performInterval,LDAFlag); 
+    [PSDDataHit,PSDDataMiss,psthHit,psthMiss,FRHit,FRMiss,freqVals,xsFR,electrodeArray]=analyseSingleSession(fileNameString{1},folderSourceString,tpStr,oStr,populationType,tapers,performInterval,neutralFlag);
 end
+
 if length(fileNameString)>1
     for i=2:length(fileNameString)
-        disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameString))]);
-        [~,~,~,~,oriChangeIndex]=getGoodPos(fileNameString{i},folderSourceString,performInterval);
+        disp(['Working on dataset ' num2str(i) ' of ' num2str(length(fileNameString)) ': ' fileNameString{i}]);
+        if strcmp(oStr,'Single')
+            [~,~,~,~,~,oriChangeIndex]=getGoodPos(fileNameString{i},folderSourceString,performInterval,neutralFlag);
+        else
+            oriChangeIndex=[];
+        end
         if nnz(isnan(oriChangeIndex))~=0
-            disp(['Performance in  ' fileNameString{1} ' is out of the interval ' num2str(performInterval(1)) ' +/- ' num2str(performInterval(2)) '%']);
+            disp(['Performance in  ' fileNameString{i} ' is out of the interval ' num2str(performInterval(1)) ' +/- ' num2str(performInterval(2)) '%']);
             continue
         else
-            [PSDDataHitTMP,PSDDataMissTMP,FRHitTMP,FRMissTMP,freqValsMT,electrodeArrayTMP]=analyseSingleSession(fileNameString{i},folderSourceString,tpStr,populationType,tapers,performInterval,LDAFlag);  
+            [PSDDataHitTMP,PSDDataMissTMP,psthHitTMP,psthMissTMP,FRHitTMP,FRMissTMP,freqVals,xsFR,electrodeArrayTMP]=analyseSingleSession(fileNameString{i},folderSourceString,tpStr,oStr,populationType,tapers,performInterval,neutralFlag);  
         end
         if ~exist('PSDDataHit','var')
             PSDDataHit=PSDDataHitTMP;
             PSDDataMiss=PSDDataMissTMP;
+            psthHit=psthHitTMP;
+            psthMiss=psthMissTMP;
             FRHit=FRHitTMP;
             FRMiss=FRMissTMP;
             electrodeArray=electrodeArrayTMP;
@@ -221,6 +309,8 @@ if length(fileNameString)>1
         for side=1:3
             PSDDataHit{side}=cat(2,PSDDataHit{side},PSDDataHitTMP{side});
             PSDDataMiss{side}=cat(2,PSDDataMiss{side},PSDDataMissTMP{side});
+            psthHit{side}=cat(2,psthHit{side},psthHitTMP{side});
+            psthMiss{side}=cat(2,psthMiss{side},psthMissTMP{side});
             FRHit{side}=cat(2,FRHit{side},FRHitTMP{side});
             FRMiss{side}=cat(2,FRMiss{side},FRMissTMP{side});
         end
@@ -231,33 +321,39 @@ if length(fileNameString)>1
 end           
 end
 
-function [PSDDataHit,PSDDataMiss,FRHit,FRMiss,freqValsMT,electrodeArray]=analyseSingleSession(fileNameString,folderSourceString,tpStr,populationType,tapers,performInterval,LDAFlag)
+function [PSDDataHit,PSDDataMiss,psthHit,psthMiss,FRHit,FRMiss,freqVals,xsFR,electrodeArray]=analyseSingleSession(fileNameString,folderSourceString,tpStr,oStr,populationType,tapers,performInterval,neutralFlag)
 
 % load Data
 folderName=fullfile(folderSourceString,'Data','segmentedData',fileNameString);
-attCueList=[{'0V'} {'1V'} {'0I'} {'1I'} {'N'}];
+if neutralFlag
+    attCueList{1}=[{'0V'} {'0I'} {'0N'} {'1N'}];
+    attCueList{2}=[{'1V'} {'1I'} {'1N'} {'0N'}];
+else
+    attCueList{1}=[{'0V'} {'0I'} {'N'}];
+    attCueList{2}=[{'1V'} {'1I'} {'N'}];
+end
 
 if strcmp(tpStr,'Baseline')
     timeRange=[-0.25 0];
-    
-    for cue=1:5
-        lfpDataHit{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{cue} '_StimOnset_LFP']));
-        lfpDataMiss{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{cue} '_StimOnset_LFP']));
-        spikeDataHit{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{cue} '_StimOnset_Spikes']));
-        spikeDataMiss{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{cue} '_StimOnset_Spikes']));
+    for side=1:2
+        for cue=1:length(attCueList{side})
+            lfpDataHit{side}{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{side}{cue} '_StimOnset_LFP']));
+            lfpDataMiss{side}{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{side}{cue} '_StimOnset_LFP']));
+            spikeDataHit{side}{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{side}{cue} '_StimOnset_Spikes']));
+            spikeDataMiss{side}{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{side}{cue} '_StimOnset_Spikes']));
+        end
     end
-    
     
 elseif strcmp(tpStr,'StimOnset')
     timeRange=[0 0.25];
-    
-    for cue=1:5
-        lfpDataHit{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{cue} '_StimOnset_LFP']));
-        lfpDataMiss{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{cue} '_StimOnset_LFP']));
-        spikeDataHit{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{cue} '_StimOnset_Spikes']));
-        spikeDataMiss{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{cue} '_StimOnset_Spikes']));
+    for side=1:2
+        for cue=1:length(attCueList{side})
+            lfpDataHit{side}{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{side}{cue} '_StimOnset_LFP']));
+            lfpDataMiss{side}{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{side}{cue} '_StimOnset_LFP']));
+            spikeDataHit{side}{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{side}{cue} '_StimOnset_Spikes']));
+            spikeDataMiss{side}{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{side}{cue} '_StimOnset_Spikes']));
+        end
     end
-    
     
 elseif strcmp(tpStr(1:11),'TargetOnset')
     if strcmp(tpStr(13:end),'500ms')
@@ -265,139 +361,135 @@ elseif strcmp(tpStr(1:11),'TargetOnset')
     elseif strcmp(tpStr(13:end),'250ms')
         timeRange=[-0.25 0];
     end
-    
-    for cue=1:5
-        lfpDataHit{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{cue} '_TargetOnset_LFP']));
-        lfpDataMiss{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{cue} '_TargetOnset_LFP']));
-        spikeDataHit{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{cue} '_TargetOnset_Spikes']));
-        spikeDataMiss{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{cue} '_TargetOnset_Spikes']));
+    for side=1:2
+        for cue=1:length(attCueList{side})
+            lfpDataHit{side}{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{side}{cue} '_TargetOnset_LFP']));
+            lfpDataMiss{side}{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{side}{cue} '_TargetOnset_LFP']));
+            spikeDataHit{side}{cue}= load(fullfile(folderName,[fileNameString 'H' attCueList{side}{cue} '_TargetOnset_Spikes']));
+            spikeDataMiss{side}{cue}= load(fullfile(folderName,[fileNameString 'M' attCueList{side}{cue} '_TargetOnset_Spikes']));
+        end
     end
-    
 end
-
-timeVals=lfpDataHit{1}.timeVals;
-Fs              = round(1/(timeVals(2)-timeVals(1)));
-timePos= intersect(find(timeVals>=timeRange(1)),find(timeVals<timeRange(2)));
-freqVals = 0:1/(diff(timeRange)):Fs-1/(diff(timeRange));
-alphaRangeHz = [8 12]; gammaRangeHz = [40 80]; lineNoiseFreqHz= 60;
-alphaPos = intersect(find(freqVals>=alphaRangeHz(1)),find(freqVals<=alphaRangeHz(2)));
-lineNoisePos = find(freqVals==lineNoiseFreqHz);
-gammaPos = setdiff(intersect(find(freqVals>=gammaRangeHz(1)),find(freqVals<=gammaRangeHz(2))),lineNoisePos);
-
-[goodPosHit,goodPosMiss,uniqueOrientationChangeDeg,orientationChangeDeg,oriChangeIndex]= getGoodPos(fileNameString,folderSourceString,performInterval);
-
-for cue=1:5
-    oriChangeThisConditionHit=orientationChangeDeg(goodPosHit{cue});
-    oriChangeThisConditionMiss=orientationChangeDeg(goodPosMiss{cue});
-    selectedPosHit=find(oriChangeThisConditionHit==uniqueOrientationChangeDeg(oriChangeIndex(cue)));
-    selectedPosMiss=find(oriChangeThisConditionMiss==uniqueOrientationChangeDeg(oriChangeIndex(cue)));
-    lfpDataHit{cue}.segmentedLFPData=lfpDataHit{cue}.segmentedLFPData(:,selectedPosHit,timePos);
-    lfpDataMiss{cue}.segmentedLFPData=lfpDataMiss{cue}.segmentedLFPData(:,selectedPosMiss,timePos);
-    spikeDataHit{cue}.segmentedSpikeData=spikeDataHit{cue}.segmentedSpikeData(:,selectedPosHit);
-    spikeDataMiss{cue}.segmentedSpikeData=spikeDataMiss{cue}.segmentedSpikeData(:,selectedPosMiss);
+binWidth = 10; % for PSTH
+timeVals = lfpDataHit{1}{1}.timeVals;
+timePos = intersect(find(timeVals>=timeRange(1)),find(timeVals<timeRange(2)));
+[goodPosHit,goodPosMiss,uniqueOrientationChangeDeg,orientationChangeDeg,~,oriChangeIndex]= getGoodPos(fileNameString,folderSourceString,performInterval,neutralFlag);
+ 
+for side=1:2
+    for cue=1:length(attCueList{side})
+        oriChangeThisConditionHit=orientationChangeDeg(goodPosHit{side}{cue});
+        oriChangeThisConditionMiss=orientationChangeDeg(goodPosMiss{side}{cue});
+        if strcmp(oStr,'Single')
+            selectedPosHit=find(oriChangeThisConditionHit==uniqueOrientationChangeDeg(oriChangeIndex(side,cue)));
+            selectedPosMiss=find(oriChangeThisConditionMiss==uniqueOrientationChangeDeg(oriChangeIndex(side,cue)));
+        elseif strcmp(oStr,'Selected')
+            selectedPosHit=sort([find(oriChangeThisConditionHit==uniqueOrientationChangeDeg(2)) find(oriChangeThisConditionHit==uniqueOrientationChangeDeg(3))]);
+            selectedPosMiss=sort([find(oriChangeThisConditionMiss==uniqueOrientationChangeDeg(2)) find(oriChangeThisConditionMiss==uniqueOrientationChangeDeg(3))]);
+        end
+        
+        lfpDataHit{side}{cue}.segmentedLFPData=lfpDataHit{side}{cue}.segmentedLFPData(:,selectedPosHit,timePos);
+        lfpDataMiss{side}{cue}.segmentedLFPData=lfpDataMiss{side}{cue}.segmentedLFPData(:,selectedPosMiss,timePos);
+        spikeDataHit{side}{cue}.segmentedSpikeData=spikeDataHit{side}{cue}.segmentedSpikeData(:,selectedPosHit);
+        spikeDataMiss{side}{cue}.segmentedSpikeData=spikeDataMiss{side}{cue}.segmentedSpikeData(:,selectedPosMiss);
+        
+    end
 end
-
 electrodeArray=getGoodElectrodes(fileNameString,folderSourceString,populationType);
 
-
-for cue=1:3
-    disp(['H' attCueList{cue} ' Stim Repeats ' num2str(size(lfpDataHit{cue}.segmentedLFPData,2))]);
-    disp(['M' attCueList{cue} ' Stim Repeats ' num2str(size(lfpDataMiss{cue}.segmentedLFPData,2))]);
+for side=1:2
+    for cue=1:length(attCueList{side})
+        disp(['H' attCueList{side}{cue} ' Stim Repeats ' num2str(size(lfpDataHit{side}{cue}.segmentedLFPData,2))]);
+        disp(['M' attCueList{side}{cue} ' Stim Repeats ' num2str(size(lfpDataMiss{side}{cue}.segmentedLFPData,2))]);
+    end
 end
-
 % Parameters for MT
 
+Fs              = round(1/(timeVals(2)-timeVals(1)));
 params.tapers   = tapers;
 params.pad      = -1;
 params.Fs       = Fs;
 params.fpass    = [0 100];
-params.trialave = 0;
-
-folderSave = fullfile(folderSourceString,'Data','savedDataHvsM');
-if ~exist(folderSave,'dir'); makeDirectory(folderSave); end
-file2save=fullfile(folderSave,[fileNameString populationType tpStr '_PI' num2str(performInterval(2)) '_tapers' num2str(tapers(2))]);
-
-
-for side=1:2  %1=Right  2=Left
+params.trialave = 1;
+for side=1:2    %1:Right Array  2:Left Array
     eList=electrodeArray{side};
-    for cue=1:5  
+    for cue=1:length(attCueList{side})    % For side 1, cue=[0V,0I,0N,1N] and for side 2, cue=[1V,1I,1N,0N] 
         for k=1:length(eList)
-            lfpHit=squeeze(lfpDataHit{cue}.segmentedLFPData(eList(k),:,:))';
-            lfpMiss=squeeze(lfpDataMiss{cue}.segmentedLFPData(eList(k),:,:))';
-            [PSDDataHit{side}{cue}(k,:,:),freqValsMT]=mtspectrumc(lfpHit,params);
-            PSDDataMiss{side}{cue}(k,:,:)=mtspectrumc(lfpMiss,params);
-            FRHit{side}{cue}(k,:)=getSpikeCounts(spikeDataHit{cue}.segmentedSpikeData(eList(k),:),timeRange)/diff(timeRange);
-            FRMiss{side}{cue}(k,:)=getSpikeCounts(spikeDataMiss{cue}.segmentedSpikeData(eList(k),:),timeRange)/diff(timeRange);
-            alphaDataHit{side}{cue}(k,:)=squeeze(sum(PSDDataHit{side}{cue}(k,alphaPos,:),2));
-            alphaDataMiss{side}{cue}(k,:)=squeeze(sum(PSDDataMiss{side}{cue}(k,alphaPos,:),2));
-            gammaDataHit{side}{cue}(k,:)=squeeze(sum(PSDDataHit{side}{cue}(k,gammaPos,:),2));
-            gammaDataMiss{side}{cue}(k,:)=squeeze(sum(PSDDataMiss{side}{cue}(k,gammaPos,:),2));
+            lfpHit=squeeze(lfpDataHit{side}{cue}.segmentedLFPData(eList(k),:,:))';
+            lfpMiss=squeeze(lfpDataMiss{side}{cue}.segmentedLFPData(eList(k),:,:))';
+            [PSDDataHit{side}(cue,k,:),freqVals]=mtspectrumc(lfpHit,params);
+            PSDDataMiss{side}(cue,k,:)=mtspectrumc(lfpMiss,params);
+            [psthHit{side}(cue,k,:),xsFRHit]=getPSTH(spikeDataHit{side}{cue}.segmentedSpikeData(eList(k),:),binWidth,[timeVals(1) timeVals(end)]);
+            [psthMiss{side}(cue,k,:),xsFRMiss]=getPSTH(spikeDataMiss{side}{cue}.segmentedSpikeData(eList(k),:),binWidth,[timeVals(1) timeVals(end)]);
+            FRHit{side}(cue,k)=mean(getSpikeCounts(spikeDataHit{side}{cue}.segmentedSpikeData(eList(k),:),timeRange)/diff(timeRange),2);
+            FRMiss{side}(cue,k)=mean(getSpikeCounts(spikeDataMiss{side}{cue}.segmentedSpikeData(eList(k),:),timeRange)/diff(timeRange),2);
         end
     end
 end
-
-if unique(diff(freqVals))~=unique(diff(freqValsMT))
-    error('Frequency Values does not match')
+if ~isequal(xsFRHit,xsFRMiss)
+    error('Time points of PSTH do not match')
+elseif isequal(xsFRHit,xsFRMiss)
+    xsFR=xsFRHit;
 end
 
-PSDDataHit{3}=combineData(PSDDataHit);
-PSDDataMiss{3}=combineData(PSDDataMiss);
-FRHit{3}=combineData(FRHit);
-FRMiss{3}=combineData(FRMiss);
-
-
-save(file2save,'FRHit','FRMiss','alphaDataHit','alphaDataMiss','gammaDataHit','gammaDataMiss');
-
-for side=1:2
-    PSDDataHit{side}=cellfun(@(x) mean(x,3),PSDDataHit{side},'UniformOutput',false);
-    PSDDataMiss{side}=cellfun(@(x) mean(x,3),PSDDataMiss{side},'UniformOutput',false);
-    FRHit{side}=cellfun(@(x) mean(x,2),FRHit{side},'UniformOutput',false);
-    FRMiss{side}=cellfun(@(x) mean(x,2),FRHit{side},'UniformOutput',false);
-    alphaDataHit{side}=cellfun(@(x) mean(x,2),alphaDataHit{side},'UniformOutput',false);
-    alphaDataMiss{side}=cellfun(@(x) mean(x,2),alphaDataMiss{side},'UniformOutput',false);
-    gammaDataHit{side}=cellfun(@(x) mean(x,2),gammaDataHit{side},'UniformOutput',false);
-    gammaDataMiss{side}=cellfun(@(x) mean(x,2),gammaDataMiss{side},'UniformOutput',false);
-end
+PSDDataHit{3}=combineData(PSDDataHit,neutralFlag);
+PSDDataMiss{3}=combineData(PSDDataMiss,neutralFlag);
+psthHit{3}=combineData(psthHit,neutralFlag);
+psthMiss{3}=combineData(psthMiss,neutralFlag);
+FRHit{3}=combineData(FRHit,neutralFlag);
+FRMiss{3}=combineData(FRMiss,neutralFlag);
 end
 
 
-function combinedData = combineDataAcrossBothArrays(data)
-if numel(size(data{1}))==2
-    Data{1} = cat(2,data{1}(1,:),data{2}(2,:)); % Attend In - Valid [(R)H0V & (L)H1V]
-    Data{2} = cat(2,data{1}(2,:),data{2}(1,:)); % Attend Out - Valid [(R)(H1V & (L)H0V)]
-    Data{3} = cat(2,data{1}(3,:),data{2}(4,:)); % Attend In - Invalid [(R)H0I & (L)H1I]
-    Data{4} = cat(2,data{1}(4,:),data{2}(3,:)); % Attend Out - Invalid [(R)H1I & (L)H0I)
-    Data{5} = cat(2,data{1}(5,:),data{2}(5,:)); % Neutral    [(R)N & (L)N]
-elseif numel(size(data{1}))==3
-    Data{1} = cat(2,data{1}(1,:,:),data{2}(2,:,:)); % Attend In - Valid [(R)H0V & (L)H1V]
-    Data{2} = cat(2,data{1}(2,:,:),data{2}(1,:,:)); % Attend Out - Valid [(R)(H1V & (L)H0V)]
-    Data{3} = cat(2,data{1}(3,:,:),data{2}(4,:,:)); % Attend In - Invalid [(R)H0I & (L)H1I]
-    Data{4} = cat(2,data{1}(4,:,:),data{2}(3,:,:)); % Attend Out - Invalid [(R)H1I & (L)H0I)
-    Data{5} = cat(2,data{1}(5,:,:),data{2}(5,:,:)); % Neutral    [(R)N & (L)N]
+function combinedData=combineData(data,neutralFlag)
+% if neutralFlag
+%     if numel(size(data{1}))==2
+%         Data{1}=cat(2,data{1}(1:2,:),data{2}(1:2,:));   % concatenates respective Attend Valid and Attend Invalid condition of both arrays.
+%         Data{2}=cat(2,data{1}(3,:),data{2}(4,:));   % concatnates contralateral changes of neutral trials i.e. left change for Right array and right change for Left Array.
+%         Data{3}=cat(2,data{1}(4,:),data{2}(3,:));   % concatenates ipsilateral changes of neutral trials i.e right change for right array and left change for right array.
+%     elseif numel(size(data{1}))==3
+%         Data{1}=cat(2,data{1}(1:2,:,:),data{2}(1:2,:,:));   % concatenates respective Attend Valid and Attend Invalid condition of both arrays.
+%         Data{2}=cat(2,data{1}(3,:,:),data{2}(4,:,:));   % concatnates contralateral changes of neutral trials i.e. left change for Right array and right change for Left Array.
+%         Data{3}=cat(2,data{1}(4,:,:),data{2}(3,:,:));   % concatenates ipsilateral changes of neutral trials i.e right change for right array and left change for right array.
+%         
+%     end
+%     combinedData= cat(1,Data{1},Data{2},Data{3});
+% else
+    combinedData=cat(2,data{1},data{2});
+% end
 end
 
-combinedData = cat(1,Data{1},Data{2},Data{3},Data{4},Data{5});
+
+function [goodPosHit,goodPosMiss,uniqueOrientationChangeDeg,orientationChangeDeg,behavior,oriChangeIndex]= getGoodPos(fileNameString,folderSourceString,performInterval,neutralFlag)
+
+[perCorrect,uniqueOrientationChangeDeg,goodIndexList,orientationChangeDeg] = getBehavior(fileNameString,folderSourceString,neutralFlag);
+if neutralFlag
+    goodPosHit{1}=[goodIndexList(1:2:3) goodIndexList(9) goodIndexList(10)];    % Positioned in the order of attCueList{1}
+    goodPosHit{2}=[goodIndexList(2:2:4) goodIndexList(10) goodIndexList(9)];    % Positioned in the order of attCueList{2}
+    goodPosMiss{1}=[goodIndexList(5:2:7) goodIndexList(11) goodIndexList(12)];
+    goodPosMiss{2}=[goodIndexList(6:2:8) goodIndexList(12) goodIndexList(11)];
+else
+    goodPosHit{1}=[goodIndexList(1:2:3) goodIndexList(9)];
+    goodPosHit{2}=[goodIndexList(2:2:4) goodIndexList(9)];
+    goodPosMiss{1}=[goodIndexList(5:2:7) goodIndexList(10)];
+    goodPosMiss{2}=[goodIndexList(6:2:8) goodIndexList(10)];
 end
 
-
-function [goodPosHit,goodPosMiss,uniqueOrientationChangeDeg,orientationChangeDeg,oriChangeIndex]= getGoodPos(fileNameString,folderSourceString,performInterval)
-
-[perCorrect,uniqueOrientationChangeDeg,goodIndexList,orientationChangeDeg] = getBehavior(fileNameString,folderSourceString);
-
-goodPosHit=[goodIndexList(1:4) goodIndexList(9)];
-goodPosMiss=[goodIndexList(5:8) goodIndexList(10)];
-
-
-% behavior{1}=perCorrect([1 3 5],:);
-% behavior{2}=perCorrect([2 4 5],:);
-% behavior{3}=(behavior{1}+behavior{2})/2;
+if neutralFlag
+    behavior{1}=perCorrect([1 3 5 6],:);  % 1:0V  3:0I  5:0N  6:1N  
+    behavior{2}=perCorrect([2 4 6 5],:);  % 2:1V  4:1I  6:1N  5:0N
+    behavior{3}=(behavior{1}+behavior{2})/2;
+else
+    behavior{1}=perCorrect([1 3 5],:);
+    behavior{2}=perCorrect([2 4 5],:);
+    behavior{3}=(behavior{1}+behavior{2})/2;
+end
 performInterval=performInterval/100;
-
-for cue=1:5
-    [performance(cue),oriChangeIndex(cue)]= min(abs(perCorrect(cue,:)-performInterval(1)));
-    if performance(cue)>performInterval(2); oriChangeIndex(cue)=NaN; end
+for side=1:3
+    for cue=1:length(goodPosHit{1})
+        [performance(side,cue),oriChangeIndex(side,cue)]= min(abs(behavior{side}(cue,:)-performInterval(1)));
+        if performance(side,cue)>performInterval(2); oriChangeIndex(side,cue)=NaN; end
+    end
 end
-
 end
 function [fileNameStringAll,fileNameStringListAll,fileNameStringListArray] = getFileNameStringList
 
@@ -439,13 +531,12 @@ all=union(sua,mua,'sorted');
 
 [~,~,electrodeArrayPos]=electrodePositionOnGridMayo(1,fileNameString);
 
-spkData{1}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H1V_StimOnset_Spikes']));
-spkData{2}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H0V_StimOnset_Spikes']));
-
-electrodeArray{1}=intersect(all,electrodeArrayPos(:,8:13));
-electrodeArray{2}=intersect(all,electrodeArrayPos(:,1:6));
+electrodeArray{1}=intersect(all,electrodeArrayPos(:,8:13)); % Right Array
+electrodeArray{2}=intersect(all,electrodeArrayPos(:,1:6));  % left Array
 
 if strcmp(populationType,'Stimulated')
+    spkData{1}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H1V_StimOnset_Spikes']));
+    spkData{2}=load(fullfile(folderSourceString,'Data','segmentedData',fileNameString,[fileNameString 'H0V_StimOnset_Spikes']));
     for j=1:2 %for each array
         elecList=electrodeArray{j}(:);
         for k=1:length(elecList)
@@ -474,7 +565,7 @@ end
 function getBarPlot(h,data,colorNames)
 mData=mean(data,2);
 semData=std(data,[],2)/sqrt(size(data,2));
-for cue=1:3
+for cue=1:size(data,1)
     bar(h,cue,mData(cue),colorNames(cue));
     hold(h,'on');
     errorbar(h,cue,mData(cue),semData(cue),colorNames(cue))
@@ -487,10 +578,24 @@ semData=std(data,[],1)/sqrt(size(data,1));
 xsLong = [x fliplr(x)];
 ysLong = [mData+semData fliplr(mData-semData)];
 
-plot(h,x,mData,'color',colorName);
-patch(xsLong,ysLong,colorName,'FaceAlpha',0.3,'Parent',h);
+plot(h,x,mData,'color',colorName,'LineWidth',1);
+patch(xsLong,ysLong,colorName,'EdgeColor','none','FaceAlpha',0.3,'Parent',h);
 hold(h,'on')
 end
+function plotHvsM(h,x,dataHit,dataMiss)
+mDataHit=mean(dataHit,1);   mDataMiss=mean(dataMiss,1);
+semDataHit=std(dataHit,[],1)/sqrt(size(dataHit,1));     semDataMiss=std(dataMiss,[],1)/sqrt(size(dataMiss,1));
+xsLong = [x fliplr(x)];
+ysLongHit = [mDataHit+semDataHit fliplr(mDataHit-semDataHit)];      ysLongMiss = [mDataMiss+semDataMiss fliplr(mDataMiss-semDataMiss)];   
+
+plot(h,x,mDataHit,'Color','r','LineWidth',1)
+patch(xsLong,ysLongHit,'r','EdgeColor','none','FaceAlpha',0.3,'Parent',h);
+hold (h,'on')
+plot(h,x,mDataMiss,'Color','b','LineWidth',1)
+patch(xsLong,ysLongMiss,'b','EdgeColor','none','FaceAlpha',0.3,'Parent',h);
+xlim(h,[min(x) max(x)])
+end
+
 function yLims = getYLims(plotHandles)
 
 [numRows,numCols] = size(plotHandles);
